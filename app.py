@@ -414,7 +414,7 @@ def _equity_sparkline(history: EquityHistory) -> go.Figure:
             line=dict(color=line_color, width=2),
             fill="tozeroy",
             fillcolor=fill_color,
-            hovertemplate="%{x|%d %b}<br><b>$%{y:,.0f}</b><extra></extra>",
+            hovertemplate="%{x|%H:%M}<br><b>$%{y:,.0f}</b><extra></extra>",
         )
     )
     fig.update_layout(
@@ -470,23 +470,23 @@ def render_sidebar() -> None:
         try:
             acct: AccountSnapshot = load_account(settings)
             positions: list[PositionRow] = load_positions(settings)
-            history = load_equity_history(settings, period="1M", timeframe="1D")
+            history = load_equity_history(settings, period="1D", timeframe="1Min")
         except Exception as e:  # noqa: BLE001
             st.error(f"Failed to load Alpaca account: {e}")
             return
 
-        # Hero equity with 1M P/L delta if we have history
+        # Hero equity with intraday P/L delta if we have history
         delta = None
         if history and history.base_value:
             sign = "+" if history.pnl >= 0 else ""
             cls = "gain" if history.pnl >= 0 else "loss"
             delta = (
                 f"<span class='{cls}'>{sign}${history.pnl:,.0f} ({sign}{history.pnl_pct:.2f}%)</span>"
-                " <span style='color:var(--text-dim);'>· 1M</span>"
+                " <span style='color:var(--text-dim);'>· Today</span>"
             )
         st.markdown(_hero_metric("Total equity", f"${acct.equity:,.0f}", delta), unsafe_allow_html=True)
 
-        # Equity sparkline (last month)
+        # Equity sparkline (intraday, 1-minute resolution)
         if history and len(history.equity) > 1:
             st.plotly_chart(
                 _equity_sparkline(history),
