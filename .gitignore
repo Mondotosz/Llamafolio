@@ -42,5 +42,8 @@ runs/
 # Eval outputs (regenerated on each run)
 tests/eval_results.json
 
+# Typst build artefacts
+docs/*.pdf
+
 # OS
 Thumbs.db
