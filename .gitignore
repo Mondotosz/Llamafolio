@@ -39,5 +39,8 @@ env/
 logs/
 runs/
 
+# Eval outputs (regenerated on each run)
+tests/eval_results.json
+
 # OS
 Thumbs.db
