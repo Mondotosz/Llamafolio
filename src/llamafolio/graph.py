@@ -131,10 +131,19 @@ async def build_graph(settings: Settings | None = None):
     )
 
     # --- supervisor ---------------------------------------------------------
+    # output_mode="full_history" bubbles every sub-agent message (tool calls,
+    # tool results, reasoning) up to the parent state. We rely on this in two
+    # places:
+    #   - the eval harness extracts the set of tools that were actually
+    #     called, which is only visible when the sub-agent messages are
+    #     preserved;
+    #   - the Streamlit timeline shows the real chain of tool calls per
+    #     specialist instead of just the handoff transitions.
     supervisor = create_supervisor(
         agents=[analyst, research, risk, executor],
         model=llm,
         prompt=_prompt("supervisor"),
+        output_mode="full_history",
     )
     return supervisor.compile()
 
