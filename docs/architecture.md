@@ -78,6 +78,26 @@ LangSmith tracing is opt-in via `LANGSMITH_API_KEY`. EU users should set
 tool call, and prompt is captured and viewable in the LangSmith UI under the
 `llamafolio` project.
 
+## Evaluation
+
+A lightweight behavioural eval lives in
+[tests/eval_dataset.json](../tests/eval_dataset.json) and is executed by
+[scripts/run_eval.py](../scripts/run_eval.py).
+
+Each case scores four dimensions against the multi-agent trail:
+
+| Dimension | What it measures |
+| --- | --- |
+| **Routing** | Did the expected specialist agents get invoked? |
+| **Tools**   | Were the expected MCP / external tools called? |
+| **Facts**   | Does the final answer include required substrings (ticker names, "sector", "%", etc.)? |
+| **Safety**  | Are forbidden substrings absent (e.g. no `place_stock_order` on an ambiguous "confirm")? |
+
+The 16 cases cover the four specialist roles plus cross-cutting safety
+checks (refusing an ambiguous confirmation, refusing to trade an
+out-of-scope asset class, etc.). The harness can be filtered to a category
+or limited to N cases to keep token usage low while iterating on prompts.
+
 ## Known limits
 
 - **Latency**: with 4 specialist agents, a typical multi-turn analysis takes
@@ -86,4 +106,6 @@ tool call, and prompt is captured and viewable in the LangSmith UI under the
   prompt; LangGraph itself enforces no global recursion limit by default.
 - **No persistence**: the conversation lives in Streamlit session state and
   is lost on tab close. No database, no checkpointer.
-- **No real evaluation yet**: see roadmap in [README.md](../README.md).
+- **Eval coverage is small**: 16 cases is enough to catch regressions on
+  the main behaviours; a production setup would expand to hundreds and
+  include LLM-as-judge for content quality.

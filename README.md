@@ -148,12 +148,14 @@ The app is then served at <http://localhost:8501>.
 | `scripts/seed_portfolio.py` | Seed a demo portfolio (tech-heavy, ~$50k) |
 | `scripts/run_single_agent.py` | Run the single-agent fallback (CLI, no UI) |
 | `scripts/run_multi_agent.py` | Run the multi-agent supervisor graph (CLI, no UI) |
+| `scripts/run_eval.py` | Score the multi-agent on `tests/eval_dataset.json` |
 
 ---
 
 ## Roadmap
 
-- [ ] Evaluation harness (LangSmith dataset + automated scoring)
+- [x] Behavioural eval harness with auto-scoring on routing / tools / facts / safety
+- [ ] LLM-as-judge for content quality on top of the behavioural eval
 - [ ] Minimal backtest of the agent's recommendations on historical data
 - [ ] Action buttons in the UI for "confirm / refuse" proposed trades
 - [ ] Restrict MCP toolset further to reduce TPM pressure
