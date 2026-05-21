@@ -14,7 +14,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from groq import APIStatusError, RateLimitError
 from langchain_core.tools import BaseTool
 from langchain_groq import ChatGroq
 from langgraph.prebuilt import create_react_agent
@@ -42,23 +41,23 @@ def _by_name(tools: list[BaseTool], names: list[str]) -> list[BaseTool]:
     return [by_name[n] for n in names if n in by_name]
 
 
-def _llm(settings: Settings):
-    """Build the LLM with automatic retry on transient Groq rate limits.
+def _llm(settings: Settings) -> ChatGroq:
+    """Build the LLM with bumped retry budget for transient Groq rate limits.
 
     Groq's free tier enforces a per-minute token budget (8k–12k TPM
-    depending on the model). Multi-agent runs frequently bump into it for
-    a few seconds, so we wrap the model with an exponential-backoff retry
-    on RateLimitError instead of letting it crash the graph.
+    depending on the model). The underlying Groq SDK already retries 429s
+    with exponential backoff; we bump `max_retries` from the default of 2
+    to 5 so a multi-agent run can absorb a couple of TPM hits per turn.
+
+    Note: we deliberately do NOT wrap the model with `.with_retry(...)` —
+    that would return a Runnable that lacks `bind_tools()`, which
+    `create_react_agent` needs.
     """
-    base = ChatGroq(
+    return ChatGroq(
         model=settings.groq_model,
         api_key=settings.groq_api_key,
         temperature=0.1,
-    )
-    return base.with_retry(
-        retry_if_exception_type=(RateLimitError, APIStatusError),
-        stop_after_attempt=5,
-        wait_exponential_jitter=True,
+        max_retries=5,
     )
 
 
