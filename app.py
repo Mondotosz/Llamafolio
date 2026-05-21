@@ -1,7 +1,8 @@
 """Llamafolio — Streamlit UI.
 
 Light, data-forward theme. No emojis. Custom CSS handles typography,
-spacing, the agent step timeline, and trade-confirmation buttons.
+spacing, agent step timeline, trade-confirmation buttons, and the
+empty-state agent capability cards.
 """
 from __future__ import annotations
 
@@ -52,6 +53,7 @@ CSS = """
 :root {
   --bg: #FAFAFA;
   --surface: #FFFFFF;
+  --surface-2: #F8FAFC;
   --border: #E5E7EB;
   --border-strong: #D1D5DB;
   --text: #0F172A;
@@ -71,23 +73,15 @@ html, body, [class*="css"], table, [data-testid="stMetricValue"] {
 }
 
 .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 100%; }
-section[data-testid="stSidebar"] > div { padding-top: 1rem; }
+section[data-testid="stSidebar"] > div { padding-top: 0.5rem; }
+section[data-testid="stSidebar"] { background: var(--surface-2); }
 [data-testid="stHeader"] { background: transparent; height: 0; }
 
-/* Brand header */
-.lf-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 0 1rem 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 1.5rem;
-}
+/* -- Brand header ----------------------------------------------------------*/
 .lf-brand { display: flex; align-items: center; gap: 0.75rem; }
 .lf-brand-mark {
   width: 32px; height: 32px;
-  background: var(--accent);
-  color: #FFFFFF;
+  background: var(--accent); color: #FFFFFF;
   border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -96,72 +90,138 @@ section[data-testid="stSidebar"] > div { padding-top: 1rem; }
 }
 .lf-brand-title { font-size: 1.2rem; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
 .lf-brand-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 1px; }
-.lf-header-actions { display: flex; align-items: center; gap: 0.5rem; }
 .lf-status-pill {
   font-size: 0.72rem; color: var(--text-muted);
   border: 1px solid var(--border); border-radius: 999px;
   padding: 0.25rem 0.7rem; background: var(--surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  display: inline-block; margin-top: 0.5rem;
 }
 
-/* Sidebar metric cards */
-.lf-metric {
+/* -- Sidebar hero + metrics ------------------------------------------------*/
+.lf-hero {
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0.7rem 0.85rem;
+  padding: 0.85rem 1rem;
   background: var(--surface);
   margin-bottom: 0.5rem;
 }
-.lf-metric-label {
-  font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--text-muted); margin-bottom: 0.25rem;
+.lf-hero-label {
+  font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 0.3rem;
 }
-.lf-metric-value { font-size: 1.35rem; font-weight: 600; color: var(--text); line-height: 1.1; }
-.lf-metric-delta { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+.lf-hero-value { font-size: 1.85rem; font-weight: 700; color: var(--text); line-height: 1.05; letter-spacing: -0.02em; }
+.lf-hero-delta { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; }
+
+.lf-metric-mini {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface);
+}
+.lf-metric-mini-label {
+  font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 0.15rem;
+}
+.lf-metric-mini-value { font-size: 1rem; font-weight: 600; color: var(--text); line-height: 1.1; }
+.lf-metric-mini-delta { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
 
 .lf-section {
-  font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--text-muted); font-weight: 600;
-  margin: 1rem 0 0.5rem 0;
+  margin: 0.8rem 0 0.45rem 0;
 }
 
-/* Position cards */
+/* -- Position cards (denser) ----------------------------------------------*/
 .lf-pos {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0.25rem 0.5rem;
+  gap: 0.15rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.5rem 0.7rem;
+  padding: 0.45rem 0.65rem;
   background: var(--surface);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
 }
-.lf-pos-sym { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.lf-pos-meta { font-size: 0.72rem; color: var(--text-muted); }
-.lf-pos-val { font-weight: 600; text-align: right; }
-.lf-pos-pl { font-size: 0.78rem; text-align: right; }
-.gain-pill { background: var(--gain-bg); color: var(--gain); border-radius: 6px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; }
-.loss-pill { background: var(--loss-bg); color: var(--loss); border-radius: 6px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; }
+.lf-pos-sym { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
+.lf-pos-meta { font-size: 0.68rem; color: var(--text-muted); }
+.lf-pos-val { font-weight: 600; text-align: right; font-size: 0.85rem; }
+.lf-pos-pl { font-size: 0.7rem; text-align: right; color: var(--text-muted); }
+.gain-pill { background: var(--gain-bg); color: var(--gain); border-radius: 5px; padding: 0 5px; font-size: 0.7rem; font-weight: 600; }
+.loss-pill { background: var(--loss-bg); color: var(--loss); border-radius: 5px; padding: 0 5px; font-size: 0.7rem; font-weight: 600; }
 
-/* Welcome card */
-.lf-welcome {
+/* -- Empty-state agent cards ----------------------------------------------*/
+.lf-hero-block {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.lf-intro {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   background: var(--surface);
-  margin-bottom: 1rem;
 }
-.lf-welcome h2 { font-size: 1.25rem; margin: 0 0 0.4rem 0; letter-spacing: -0.01em; font-weight: 600; }
-.lf-welcome p { color: var(--text-muted); margin: 0; font-size: 0.9rem; line-height: 1.5; }
+.lf-intro h2 { font-size: 1.4rem; margin: 0 0 0.4rem 0; letter-spacing: -0.01em; font-weight: 600; }
+.lf-intro p { color: var(--text-muted); margin: 0; font-size: 0.93rem; line-height: 1.55; }
 
-/* Secondary buttons styled as chips */
+.lf-flow {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+}
+.lf-flow-title {
+  font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600; margin-bottom: 0.6rem;
+}
+.lf-flow-step {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.8rem; color: var(--text);
+  padding: 0.2rem 0;
+}
+.lf-flow-num {
+  width: 18px; height: 18px; border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.7rem; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.lf-agent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.lf-agent-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.lf-agent-card:hover { border-color: var(--border-strong); }
+.lf-agent-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+}
+.lf-agent-role { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem; line-height: 1.25; }
+.lf-agent-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; }
+
+/* -- Suggestion chip buttons ----------------------------------------------*/
 [data-testid="stHorizontalBlock"] button[kind="secondary"] {
   border: 1px solid var(--border) !important;
   background: var(--surface) !important;
   color: var(--text) !important;
   border-radius: 999px !important;
-  padding: 0.35rem 0.9rem !important;
-  font-size: 0.82rem !important;
+  padding: 0.4rem 1rem !important;
+  font-size: 0.84rem !important;
   font-weight: 500 !important;
   transition: border-color 0.15s, background 0.15s;
 }
@@ -170,7 +230,7 @@ section[data-testid="stSidebar"] > div { padding-top: 1rem; }
   background: var(--accent-soft) !important;
 }
 
-/* Chat message wrapper */
+/* -- Chat -----------------------------------------------------------------*/
 [data-testid="stChatMessage"] {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -179,7 +239,6 @@ section[data-testid="stSidebar"] > div { padding-top: 1rem; }
   background: var(--surface);
 }
 
-/* Per-agent label inside an assistant message */
 .lf-agent-label {
   display: inline-block;
   font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
@@ -192,7 +251,6 @@ section[data-testid="stSidebar"] > div { padding-top: 1rem; }
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Step timeline (inside the thinking expander) */
 .lf-step {
   display: flex; align-items: center; gap: 0.6rem;
   font-size: 0.82rem; color: var(--text);
@@ -211,7 +269,7 @@ section[data-testid="stSidebar"] > div { padding-top: 1rem; }
 }
 .lf-step-name { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--text); }
 
-/* Confirm / Refuse trade banner */
+/* -- Trade confirm banner -------------------------------------------------*/
 .lf-trade-banner {
   border: 1px solid var(--border-strong);
   border-left: 4px solid var(--accent);
@@ -226,7 +284,6 @@ section[data-testid="stSidebar"] > div { padding-top: 1rem; }
 }
 .lf-trade-banner-body { font-size: 0.92rem; color: var(--text); }
 
-/* Primary action button = dark accent */
 button[kind="primary"] {
   background: var(--accent) !important;
   color: #FFFFFF !important;
@@ -236,7 +293,20 @@ button[kind="primary"] {
 }
 button[kind="primary"]:hover { background: #1E293B !important; }
 
-.lf-disclaimer { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.5rem; }
+.lf-disclaimer {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+/* responsive — collapse agent grid on narrow screens */
+@media (max-width: 1200px) {
+  .lf-agent-grid { grid-template-columns: repeat(2, 1fr); }
+  .lf-hero-block { grid-template-columns: 1fr; }
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -257,33 +327,41 @@ def render_header() -> None:
                 <div class="lf-brand-sub">AI portfolio advisor &middot; Alpaca paper trading</div>
               </div>
             </div>
+            <span class="lf-status-pill">Paper &middot; gpt-oss 120b on Groq</span>
             """,
             unsafe_allow_html=True,
         )
     with col_actions:
-        c1, c2 = st.columns([1, 1])
-        with c1:
-            st.markdown(
-                "<div class='lf-status-pill' style='margin-top:0.5rem;'>Paper</div>",
-                unsafe_allow_html=True,
-            )
-        with c2:
-            if st.button("New", help="Clear the conversation", use_container_width=True):
-                st.session_state["history"] = []
-                st.session_state.pop("pending_input", None)
-                st.rerun()
-    st.markdown("<hr style='margin: 0.75rem 0 1.25rem 0; border: none; border-top: 1px solid var(--border);'/>", unsafe_allow_html=True)
+        st.write("")
+        if st.button("New conversation", help="Clear the conversation", use_container_width=True):
+            st.session_state["history"] = []
+            st.session_state.pop("pending_input", None)
+            st.rerun()
+    st.markdown(
+        "<hr style='margin: 1rem 0 1.25rem 0; border: none; border-top: 1px solid var(--border);'/>",
+        unsafe_allow_html=True,
+    )
 
 
 # ----------------------------------------------------------------------------
 # Sidebar — dashboard
 # ----------------------------------------------------------------------------
-def _metric(label: str, value: str, delta: str | None = None) -> str:
-    delta_html = f"<div class='lf-metric-delta'>{delta}</div>" if delta else ""
+def _hero_metric(label: str, value: str, delta: str | None = None) -> str:
+    delta_html = f"<div class='lf-hero-delta'>{delta}</div>" if delta else ""
     return (
-        f"<div class='lf-metric'>"
-        f"<div class='lf-metric-label'>{label}</div>"
-        f"<div class='lf-metric-value'>{value}</div>"
+        f"<div class='lf-hero'>"
+        f"<div class='lf-hero-label'>{label}</div>"
+        f"<div class='lf-hero-value'>{value}</div>"
+        f"{delta_html}</div>"
+    )
+
+
+def _mini_metric(label: str, value: str, delta: str | None = None) -> str:
+    delta_html = f"<div class='lf-metric-mini-delta'>{delta}</div>" if delta else ""
+    return (
+        f"<div class='lf-metric-mini'>"
+        f"<div class='lf-metric-mini-label'>{label}</div>"
+        f"<div class='lf-metric-mini-value'>{value}</div>"
         f"{delta_html}</div>"
     )
 
@@ -294,7 +372,7 @@ def _position_card(p: PositionRow) -> str:
     return (
         f"<div class='lf-pos'>"
         f"<div><div class='lf-pos-sym'>{p.symbol}</div>"
-        f"<div class='lf-pos-meta'>{p.sector} &middot; {p.qty:g} sh</div></div>"
+        f"<div class='lf-pos-meta'>{p.sector}</div></div>"
         f"<div><div class='lf-pos-val'>${p.market_value:,.0f}</div>"
         f"<div class='lf-pos-pl'><span class='{pl_cls}'>{pl_sign}{p.plpc:.2f}%</span> &middot; {p.weight_pct:.0f}%</div></div>"
         f"</div>"
@@ -306,7 +384,7 @@ def _sector_donut(breakdown: dict[str, float]) -> go.Figure:
         go.Pie(
             labels=list(breakdown.keys()),
             values=list(breakdown.values()),
-            hole=0.62,
+            hole=0.65,
             sort=False,
             textinfo="none",
             hovertemplate="<b>%{label}</b><br>%{value:.1f}%<extra></extra>",
@@ -318,9 +396,13 @@ def _sector_donut(breakdown: dict[str, float]) -> go.Figure:
     )
     fig.update_layout(
         showlegend=True,
-        legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.05, font=dict(size=11)),
-        margin=dict(l=0, r=0, t=10, b=0),
-        height=220,
+        legend=dict(
+            orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.05,
+            font=dict(size=10, color="#0F172A"),
+            bgcolor="rgba(0,0,0,0)",
+        ),
+        margin=dict(l=0, r=0, t=5, b=5),
+        height=190,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="ui-sans-serif, system-ui, sans-serif", color="#0F172A"),
@@ -331,7 +413,6 @@ def _sector_donut(breakdown: dict[str, float]) -> go.Figure:
 def render_sidebar() -> None:
     settings = load_settings()
     with st.sidebar:
-        st.markdown("<div class='lf-section'>Account</div>", unsafe_allow_html=True)
         try:
             acct: AccountSnapshot = load_account(settings)
             positions: list[PositionRow] = load_positions(settings)
@@ -339,12 +420,26 @@ def render_sidebar() -> None:
             st.error(f"Failed to load Alpaca account: {e}")
             return
 
-        st.markdown(_metric("Equity", f"${acct.equity:,.0f}"), unsafe_allow_html=True)
+        # Hero equity, then Cash + Invested side by side
+        st.markdown(
+            _hero_metric("Total equity", f"${acct.equity:,.0f}"),
+            unsafe_allow_html=True,
+        )
         c1, c2 = st.columns(2)
-        c1.markdown(_metric("Cash", f"${acct.cash:,.0f}", f"{acct.cash_pct:.0f}%"), unsafe_allow_html=True)
-        c2.markdown(_metric("Invested", f"${acct.invested:,.0f}"), unsafe_allow_html=True)
+        c1.markdown(
+            _mini_metric("Cash", f"${acct.cash:,.0f}", f"{acct.cash_pct:.0f}% of equity"),
+            unsafe_allow_html=True,
+        )
+        c2.markdown(
+            _mini_metric("Invested", f"${acct.invested:,.0f}"),
+            unsafe_allow_html=True,
+        )
 
-        st.markdown("<div class='lf-section'>Positions</div>", unsafe_allow_html=True)
+        # Positions, denser cards
+        st.markdown(
+            f"<div class='lf-section'>Positions &middot; {len(positions)}</div>",
+            unsafe_allow_html=True,
+        )
         if not positions:
             st.markdown(
                 "<div class='lf-pos' style='justify-content:center;text-align:center;color:var(--text-muted);'>"
@@ -356,7 +451,11 @@ def render_sidebar() -> None:
                 st.markdown(_position_card(p), unsafe_allow_html=True)
 
             st.markdown("<div class='lf-section'>Sector exposure</div>", unsafe_allow_html=True)
-            st.plotly_chart(_sector_donut(sector_breakdown(positions)), use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(
+                _sector_donut(sector_breakdown(positions)),
+                use_container_width=True,
+                config={"displayModeBar": False},
+            )
 
         st.markdown("<div class='lf-section'>&nbsp;</div>", unsafe_allow_html=True)
         if st.button("Refresh data", use_container_width=True):
@@ -364,26 +463,22 @@ def render_sidebar() -> None:
 
 
 # ----------------------------------------------------------------------------
-# Trade detection — parse a proposed trade out of an assistant message
+# Trade detection
 # ----------------------------------------------------------------------------
 TRADE_TRIGGERS = ("proposed trade", "proposal", "recommendation", "trim", "rebalance")
 
+
 def detect_proposed_trade(text: str) -> dict | None:
-    """Return a dict with symbol/side/qty when the assistant has proposed a
-    concrete trade, else None. Heuristic — robust enough for the POC."""
     if not text:
         return None
     low = text.lower()
     if not any(t in low for t in TRADE_TRIGGERS):
         return None
-
     sym_m = re.search(r"\b([A-Z]{1,5})\b\s*(?:\(|,|\.|$|\s)", text)
     side_m = re.search(r"\b(buy|sell|trim|reduce)\b", text, re.IGNORECASE)
-    # Look for a percentage or share quantity
     qty_pct = re.search(r"(\d+(?:\.\d+)?)\s*%", text)
     qty_sh = re.search(r"(\d+(?:\.\d+)?)\s*share", text, re.IGNORECASE)
     qty_usd = re.search(r"\$\s?(\d[\d,]*)", text)
-
     if not (sym_m and side_m):
         return None
     side = side_m.group(1).lower()
@@ -402,7 +497,65 @@ def detect_proposed_trade(text: str) -> dict | None:
 
 
 # ----------------------------------------------------------------------------
-# Main — welcome, chat, suggestions
+# Empty state — intro, agent cards, how it works
+# ----------------------------------------------------------------------------
+AGENTS = [
+    {
+        "name": "portfolio_analyst",
+        "role": "Reads your portfolio",
+        "desc": "Computes composition, sector exposure on invested capital, and flags concentration above 40%.",
+    },
+    {
+        "name": "research_agent",
+        "role": "Gathers context",
+        "desc": "Pulls news, snapshots, fundamentals and web sources to back any claim with citations.",
+    },
+    {
+        "name": "risk_manager",
+        "role": "Vets every proposal",
+        "desc": "Checks position sizing, sector exposure post-trade and volatility before any trade idea reaches you.",
+    },
+    {
+        "name": "executor",
+        "role": "Places paper orders",
+        "desc": "Only invoked after you explicitly confirm. Refuses ambiguous instructions on purpose.",
+    },
+]
+
+
+def render_welcome() -> None:
+    st.markdown(
+        """
+        <div class="lf-hero-block">
+          <div class="lf-intro">
+            <h2>Ask anything about your portfolio</h2>
+            <p>Llamafolio routes your question across four specialist agents, then synthesises a single answer with sources. Trades are <strong>never</strong> executed without your explicit confirmation &mdash; you get a confirm/refuse button when an order is proposed.</p>
+          </div>
+          <div class="lf-flow">
+            <div class="lf-flow-title">How a turn flows</div>
+            <div class="lf-flow-step"><span class="lf-flow-num">1</span> Supervisor reads the question</div>
+            <div class="lf-flow-step"><span class="lf-flow-num">2</span> Routes to the right specialist(s)</div>
+            <div class="lf-flow-step"><span class="lf-flow-num">3</span> Specialists call MCP &amp; web tools</div>
+            <div class="lf-flow-step"><span class="lf-flow-num">4</span> Supervisor synthesises and ends</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    cards_html = "".join(
+        f"<div class='lf-agent-card'>"
+        f"<div class='lf-agent-name'>{a['name']}</div>"
+        f"<div class='lf-agent-role'>{a['role']}</div>"
+        f"<div class='lf-agent-desc'>{a['desc']}</div>"
+        f"</div>"
+        for a in AGENTS
+    )
+    st.markdown(f"<div class='lf-agent-grid'>{cards_html}</div>", unsafe_allow_html=True)
+
+
+# ----------------------------------------------------------------------------
+# Suggestions
 # ----------------------------------------------------------------------------
 SUGGESTIONS = [
     ("Analyse my sector exposure", "Analyse my sector exposure and flag any concentration risk."),
@@ -410,18 +563,6 @@ SUGGESTIONS = [
     ("Suggest a rebalancing", "Suggest ONE position to trim with research and a risk check. Do not execute."),
     ("Account snapshot", "Give me a one-paragraph snapshot of my account state."),
 ]
-
-
-def render_welcome() -> None:
-    st.markdown(
-        """
-        <div class="lf-welcome">
-          <h2>Portfolio advisor</h2>
-          <p>Ask about your portfolio and Llamafolio routes the question across four specialist agents (analyst, research, risk, executor), then synthesises a single answer with sources. Trades are never executed without your explicit confirmation.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 def render_suggestions(key_prefix: str = "sug") -> None:
@@ -432,45 +573,30 @@ def render_suggestions(key_prefix: str = "sug") -> None:
             st.rerun()
 
 
-def _step_label(msg) -> tuple[str, str, str] | None:
-    """Return (kind, body_html, name) or None for non-step messages."""
+# ----------------------------------------------------------------------------
+# Agent step labels (timeline)
+# ----------------------------------------------------------------------------
+def _step_label(msg) -> tuple[str, str] | None:
     name = getattr(msg, "name", None) or "supervisor"
     if isinstance(msg, AIMessage) and msg.tool_calls:
         for tc in msg.tool_calls:
             t = tc["name"]
             if t.startswith("transfer_to_"):
                 target = t.removeprefix("transfer_to_")
-                return ("route", f"<span class='lf-step-name'>{target}</span>", name)
+                return ("route", f"<span class='lf-step-name'>{target}</span>")
             if t.startswith("transfer_back"):
-                return ("done", f"<span class='lf-step-name'>{name}</span>", name)
-            return ("tool", f"<span class='lf-step-name'>{name} &middot; {t}</span>", name)
+                return ("done", f"<span class='lf-step-name'>{name}</span>")
+            return ("tool", f"<span class='lf-step-name'>{name} &middot; {t}</span>")
     return None
 
 
 HANDOFF_NOISE = ("transferred back", "transferring back", "handing back")
 
 
-def render_agent_messages(new_msgs: list, container) -> None:
-    """Render every substantive agent message produced this turn."""
-    agent_msgs = [
-        m for m in new_msgs
-        if isinstance(m, AIMessage) and m.content and not m.tool_calls
-        and not any(s in m.content.lower() for s in HANDOFF_NOISE)
-    ]
-    for m in agent_msgs:
-        name = getattr(m, "name", None) or "supervisor"
-        with container:
-            st.markdown(
-                f"<span class='lf-agent-label'>{name.replace('_', ' ')}</span>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(m.content)
-        st.session_state.history.append(m)
-    return agent_msgs
-
-
+# ----------------------------------------------------------------------------
+# Trade actions
+# ----------------------------------------------------------------------------
 def render_trade_actions(agent_msgs: list) -> None:
-    """If any agent message proposed a concrete trade, show Confirm / Refuse."""
     trade = None
     for m in agent_msgs:
         trade = detect_proposed_trade(m.content)
@@ -478,7 +604,6 @@ def render_trade_actions(agent_msgs: list) -> None:
             break
     if not trade:
         return
-
     st.markdown(
         f"<div class='lf-trade-banner'>"
         f"<div class='lf-trade-banner-title'>Action requested</div>"
@@ -502,6 +627,9 @@ def render_trade_actions(agent_msgs: list) -> None:
             st.rerun()
 
 
+# ----------------------------------------------------------------------------
+# Chat
+# ----------------------------------------------------------------------------
 def render_chat() -> None:
     if "history" not in st.session_state:
         st.session_state.history = []
@@ -524,13 +652,10 @@ def render_chat() -> None:
                 )
                 st.markdown(msg.content)
 
-    # Always render the input so it never disappears after a chip click.
     typed = st.chat_input("Ask anything about your portfolio.")
     pending = st.session_state.pop("pending_input", None)
     prompt = pending or typed
 
-    # Persistent suggestions stay visible above the input after the welcome
-    # disappears, so the user always has quick starters available.
     if not show_welcome:
         st.markdown("<div class='lf-section'>Quick prompts</div>", unsafe_allow_html=True)
         render_suggestions("persist")
@@ -571,7 +696,7 @@ def render_chat() -> None:
         for m in new_msgs:
             step = _step_label(m)
             if step:
-                kind, body, _ = step
+                kind, body = step
                 status.markdown(
                     f"<div class='lf-step'>"
                     f"<span class='lf-step-kind'>{kind}</span>{body}"
@@ -580,7 +705,6 @@ def render_chat() -> None:
                 )
         status.update(label="Done", state="complete", expanded=False)
 
-    # Each agent message gets its own chat bubble below for clarity.
     agent_msgs = []
     for m in new_msgs:
         if (
