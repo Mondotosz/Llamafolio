@@ -45,7 +45,7 @@ def _llm(settings: Settings) -> ChatGroq:
     return ChatGroq(
         model=settings.groq_model,
         api_key=settings.groq_api_key,
-        temperature=0.2,
+        temperature=0.1,
     )
 
 
