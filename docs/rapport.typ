@@ -14,8 +14,8 @@
 #show raw: set text(font: "DejaVu Sans Mono", size: 8.5pt)
 
 #align(center)[
-  #text(size: 18pt, weight: 700)[Llamafolio]
-  #v(-0.2em)
+  #image("../assets/llamafolio-horizontal-dark.svg", width: 7cm)
+  #v(0.3em)
   #text(size: 11pt, fill: rgb("#64748B"))[
     Conseiller de portefeuille multi-agents pour le paper trading Alpaca
   ]
@@ -127,7 +127,7 @@ ses outils. Concrètement, lors d'une analyse :
 
 Un portefeuille de démonstration (`scripts/seed_portfolio.py`) place 7
 positions volontairement déséquilibrées (#emph[tech-heavy]) pour offrir un
-cas d'analyse non-trivial : AAPL, MSFT, NVDA, GOOGL ($\approx$ 48% du
+cas d'analyse non-trivial : AAPL, MSFT, NVDA, GOOGL ($approx$ 48% du
 capital investi en tech), JPM, XOM, JNJ.
 
 = 4. Fonctionnement

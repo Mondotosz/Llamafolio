@@ -1,4 +1,8 @@
-# 🦙 Llamafolio
+<p align="center">
+  <img src="assets/llamafolio-horizontal-premium.svg" alt="Llamafolio" width="420">
+</p>
+
+# Llamafolio
 
 > Multi-agent LLM portfolio advisor for Alpaca paper trading.
 

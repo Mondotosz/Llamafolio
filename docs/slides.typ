@@ -9,6 +9,7 @@
     author: [Victor & Kenan],
     date: datetime.today(),
     institution: [HEIG-VD · Cours IA générative],
+    logo: image("../assets/llamafolio-icon-light.svg", width: 1.5cm),
   ),
   config-common(
     handout: false,

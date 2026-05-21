@@ -7,7 +7,9 @@ empty-state agent capability cards.
 from __future__ import annotations
 
 import asyncio
+import base64
 import re
+from pathlib import Path
 
 import plotly.graph_objects as go
 import streamlit as st
@@ -23,12 +25,19 @@ from llamafolio.ui.portfolio_data import (
     sector_breakdown,
 )
 
+ASSETS_DIR = Path(__file__).parent / "assets"
+
 st.set_page_config(
     page_title="Llamafolio",
-    page_icon=None,
+    page_icon=str(ASSETS_DIR / "favicon-512.png"),
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+
+@st.cache_data
+def _asset_b64(name: str) -> str:
+    return base64.b64encode((ASSETS_DIR / name).read_bytes()).decode()
 
 
 # ----------------------------------------------------------------------------
@@ -80,13 +89,9 @@ section[data-testid="stSidebar"] { background: var(--surface-2); }
 /* -- Brand header ----------------------------------------------------------*/
 .lf-brand { display: flex; align-items: center; gap: 0.75rem; }
 .lf-brand-mark {
-  width: 32px; height: 32px;
-  background: var(--accent); color: #FFFFFF;
-  border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.9rem; font-weight: 700;
-  letter-spacing: -0.02em;
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  display: block;
 }
 .lf-brand-title { font-size: 1.2rem; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
 .lf-brand-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 1px; }
@@ -317,11 +322,12 @@ st.markdown(CSS, unsafe_allow_html=True)
 # ----------------------------------------------------------------------------
 def render_header() -> None:
     col_brand, col_actions = st.columns([5, 1])
+    mark_b64 = _asset_b64("llamafolio-icon-premium.svg")
     with col_brand:
         st.markdown(
-            """
+            f"""
             <div class="lf-brand">
-              <div class="lf-brand-mark">L</div>
+              <img class="lf-brand-mark" src="data:image/svg+xml;base64,{mark_b64}" alt="Llamafolio"/>
               <div>
                 <div class="lf-brand-title">Llamafolio</div>
                 <div class="lf-brand-sub">AI portfolio advisor &middot; Alpaca paper trading</div>
