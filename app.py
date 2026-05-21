@@ -26,6 +26,7 @@ from llamafolio.ui.portfolio_data import (
 )
 
 ASSETS_DIR = Path(__file__).parent / "assets"
+ASSISTANT_AVATAR = str(ASSETS_DIR / "llamafolio-icon-premium.png")
 
 st.set_page_config(
     page_title="Llamafolio",
@@ -87,20 +88,40 @@ section[data-testid="stSidebar"] { background: var(--surface-2); }
 [data-testid="stHeader"] { background: transparent; height: 0; }
 
 /* -- Brand header ----------------------------------------------------------*/
-.lf-brand { display: flex; flex-direction: column; gap: 0.25rem; }
+.lf-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.25rem 0 1.1rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.lf-brand { display: flex; align-items: center; gap: 1rem; }
 .lf-brand-lockup {
-  height: 38px;
+  height: 56px;
   width: auto;
   display: block;
 }
-.lf-brand-title { font-size: 1.2rem; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
-.lf-brand-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 1px; }
+.lf-brand-meta {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--border);
+}
+.lf-brand-sub { font-size: 0.82rem; color: var(--text-muted); line-height: 1.3; max-width: 28ch; }
 .lf-status-pill {
-  font-size: 0.72rem; color: var(--text-muted);
+  font-size: 0.7rem; color: var(--text-muted);
   border: 1px solid var(--border); border-radius: 999px;
-  padding: 0.25rem 0.7rem; background: var(--surface);
+  padding: 0.2rem 0.65rem; background: var(--surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  display: inline-block; margin-top: 0.5rem;
+  display: inline-block;
+  width: fit-content;
+}
+.lf-header-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+@media (max-width: 900px) {
+  .lf-header-row { flex-direction: column; align-items: stretch; }
+  .lf-brand-meta { border-left: none; padding-left: 0; }
 }
 
 /* -- Sidebar hero + metrics ------------------------------------------------*/
@@ -144,11 +165,13 @@ section[data-testid="stSidebar"] { background: var(--surface-2); }
   gap: 0.15rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.45rem 0.65rem;
+  padding: 0.5rem 0.7rem;
   background: var(--surface);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.35rem;
   font-size: 0.85rem;
+  transition: border-color 0.12s, transform 0.12s;
 }
+.lf-pos:hover { border-color: var(--border-strong); }
 .lf-pos-sym { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
 .lf-pos-meta { font-size: 0.68rem; color: var(--text-muted); }
 .lf-pos-val { font-weight: 600; text-align: right; font-size: 0.85rem; }
@@ -225,14 +248,15 @@ section[data-testid="stSidebar"] { background: var(--surface-2); }
   background: var(--surface) !important;
   color: var(--text) !important;
   border-radius: 999px !important;
-  padding: 0.4rem 1rem !important;
-  font-size: 0.84rem !important;
+  padding: 0.45rem 1.05rem !important;
+  font-size: 0.86rem !important;
   font-weight: 500 !important;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
 }
 [data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {
   border-color: var(--accent) !important;
   background: var(--accent-soft) !important;
+  transform: translateY(-1px);
 }
 
 /* -- Chat -----------------------------------------------------------------*/
@@ -321,27 +345,30 @@ st.markdown(CSS, unsafe_allow_html=True)
 # Header
 # ----------------------------------------------------------------------------
 def render_header() -> None:
-    col_brand, col_actions = st.columns([5, 1])
     lockup_b64 = _asset_b64("llamafolio-horizontal-dark.svg")
+    col_brand, col_actions = st.columns([6, 1], gap="medium")
     with col_brand:
         st.markdown(
             f"""
             <div class="lf-brand">
               <img class="lf-brand-lockup" src="data:image/svg+xml;base64,{lockup_b64}" alt="Llamafolio"/>
-              <div class="lf-brand-sub">AI portfolio advisor &middot; Alpaca paper trading</div>
+              <div class="lf-brand-meta">
+                <div class="lf-brand-sub">Multi-agent AI portfolio advisor on Alpaca paper trading</div>
+                <span class="lf-status-pill">Paper &middot; gpt-oss 120b on Groq</span>
+              </div>
             </div>
-            <span class="lf-status-pill">Paper &middot; gpt-oss 120b on Groq</span>
             """,
             unsafe_allow_html=True,
         )
     with col_actions:
+        st.write("")
         st.write("")
         if st.button("New conversation", help="Clear the conversation", use_container_width=True):
             st.session_state["history"] = []
             st.session_state.pop("pending_input", None)
             st.rerun()
     st.markdown(
-        "<hr style='margin: 1rem 0 1.25rem 0; border: none; border-top: 1px solid var(--border);'/>",
+        "<hr style='margin: 0.25rem 0 1.5rem 0; border: none; border-top: 1px solid var(--border);'/>",
         unsafe_allow_html=True,
     )
 
@@ -647,7 +674,7 @@ def render_chat() -> None:
             with st.chat_message("user"):
                 st.markdown(msg.content)
         elif isinstance(msg, AIMessage) and msg.content and not msg.tool_calls:
-            with st.chat_message("assistant"):
+            with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
                 name = getattr(msg, "name", None) or "supervisor"
                 st.markdown(
                     f"<span class='lf-agent-label'>{name.replace('_', ' ')}</span>",
@@ -671,7 +698,7 @@ def render_chat() -> None:
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
         status = st.status("Thinking...", expanded=True)
         graph = get_graph()
         try:
@@ -714,7 +741,7 @@ def render_chat() -> None:
             isinstance(m, AIMessage) and m.content and not m.tool_calls
             and not any(s in m.content.lower() for s in HANDOFF_NOISE)
         ):
-            with st.chat_message("assistant"):
+            with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
                 name = getattr(m, "name", None) or "supervisor"
                 st.markdown(
                     f"<span class='lf-agent-label'>{name.replace('_', ' ')}</span>",
