@@ -19,14 +19,17 @@ from llamafolio.config import load_settings
 from llamafolio.graph import build_graph
 from llamafolio.ui.portfolio_data import (
     AccountSnapshot,
+    EquityHistory,
     PositionRow,
     load_account,
+    load_equity_history,
     load_positions,
     sector_breakdown,
 )
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 ASSISTANT_AVATAR = str(ASSETS_DIR / "llamafolio-icon-premium.png")
+USER_AVATAR = str(ASSETS_DIR / "user-avatar.svg")
 
 st.set_page_config(
     page_title="Llamafolio",
@@ -88,40 +91,28 @@ section[data-testid="stSidebar"] { background: var(--surface-2); }
 [data-testid="stHeader"] { background: transparent; height: 0; }
 
 /* -- Brand header ----------------------------------------------------------*/
-.lf-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 0.25rem 0 1.1rem 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 1.5rem;
-}
-.lf-brand { display: flex; align-items: center; gap: 1rem; }
+.lf-brand { display: flex; align-items: center; gap: 0.85rem; }
 .lf-brand-lockup {
-  height: 56px;
+  height: 44px;
   width: auto;
   display: block;
 }
-.lf-brand-meta {
-  display: flex; flex-direction: column; gap: 0.35rem;
-  padding-left: 1rem;
-  border-left: 1px solid var(--border);
-}
-.lf-brand-sub { font-size: 0.82rem; color: var(--text-muted); line-height: 1.3; max-width: 28ch; }
 .lf-status-pill {
   font-size: 0.7rem; color: var(--text-muted);
   border: 1px solid var(--border); border-radius: 999px;
-  padding: 0.2rem 0.65rem; background: var(--surface);
+  padding: 0.22rem 0.65rem; background: var(--surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   display: inline-block;
   width: fit-content;
+  white-space: nowrap;
 }
-.lf-header-actions { display: flex; align-items: center; gap: 0.5rem; }
-
-@media (max-width: 900px) {
-  .lf-header-row { flex-direction: column; align-items: stretch; }
-  .lf-brand-meta { border-left: none; padding-left: 0; }
+.lf-status-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: var(--gain);
+  margin-right: 0.4rem;
+  vertical-align: middle;
 }
 
 /* -- Sidebar hero + metrics ------------------------------------------------*/
@@ -182,23 +173,23 @@ section[data-testid="stSidebar"] { background: var(--surface-2); }
 /* -- Empty-state agent cards ----------------------------------------------*/
 .lf-hero-block {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
 }
 .lf-intro {
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.25rem 1.5rem;
+  padding: 1.1rem 1.35rem;
   background: var(--surface);
 }
-.lf-intro h2 { font-size: 1.4rem; margin: 0 0 0.4rem 0; letter-spacing: -0.01em; font-weight: 600; }
-.lf-intro p { color: var(--text-muted); margin: 0; font-size: 0.93rem; line-height: 1.55; }
+.lf-intro h2 { font-size: 1.3rem; margin: 0 0 0.35rem 0; letter-spacing: -0.01em; font-weight: 600; }
+.lf-intro p { color: var(--text-muted); margin: 0; font-size: 0.88rem; line-height: 1.5; }
 
 .lf-flow {
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1rem 1.1rem;
+  padding: 0.9rem 1.05rem;
   background: var(--surface);
 }
 .lf-flow-title {
@@ -228,7 +219,7 @@ section[data-testid="stSidebar"] { background: var(--surface-2); }
 .lf-agent-card {
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0.9rem 1rem;
+  padding: 0.8rem 0.95rem;
   background: var(--surface);
   transition: border-color 0.15s, transform 0.15s;
 }
@@ -346,29 +337,31 @@ st.markdown(CSS, unsafe_allow_html=True)
 # ----------------------------------------------------------------------------
 def render_header() -> None:
     lockup_b64 = _asset_b64("llamafolio-horizontal-dark.svg")
-    col_brand, col_actions = st.columns([6, 1], gap="medium")
+    col_brand, col_pill, col_actions = st.columns([3, 2, 1], gap="medium", vertical_alignment="center")
     with col_brand:
         st.markdown(
             f"""
             <div class="lf-brand">
               <img class="lf-brand-lockup" src="data:image/svg+xml;base64,{lockup_b64}" alt="Llamafolio"/>
-              <div class="lf-brand-meta">
-                <div class="lf-brand-sub">Multi-agent AI portfolio advisor on Alpaca paper trading</div>
-                <span class="lf-status-pill">Paper &middot; gpt-oss 120b on Groq</span>
-              </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
+    with col_pill:
+        st.markdown(
+            "<div style='text-align:right;'>"
+            "<span class='lf-status-pill'><span class='lf-status-dot'></span>"
+            "Paper &middot; gpt-oss 120b on Groq</span>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
     with col_actions:
-        st.write("")
-        st.write("")
         if st.button("New conversation", help="Clear the conversation", use_container_width=True):
             st.session_state["history"] = []
             st.session_state.pop("pending_input", None)
             st.rerun()
     st.markdown(
-        "<hr style='margin: 0.25rem 0 1.5rem 0; border: none; border-top: 1px solid var(--border);'/>",
+        "<hr style='margin: 0.5rem 0 1.5rem 0; border: none; border-top: 1px solid var(--border);'/>",
         unsafe_allow_html=True,
     )
 
@@ -409,6 +402,37 @@ def _position_card(p: PositionRow) -> str:
     )
 
 
+def _equity_sparkline(history: EquityHistory) -> go.Figure:
+    is_gain = history.pnl >= 0
+    line_color = "#047857" if is_gain else "#B91C1C"
+    fill_color = "rgba(4, 120, 87, 0.10)" if is_gain else "rgba(185, 28, 28, 0.10)"
+    fig = go.Figure(
+        go.Scatter(
+            x=history.timestamps,
+            y=history.equity,
+            mode="lines",
+            line=dict(color=line_color, width=2),
+            fill="tozeroy",
+            fillcolor=fill_color,
+            hovertemplate="%{x|%d %b}<br><b>$%{y:,.0f}</b><extra></extra>",
+        )
+    )
+    fig.update_layout(
+        height=90,
+        margin=dict(l=0, r=0, t=4, b=0),
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(visible=False),
+        yaxis=dict(
+            visible=False,
+            range=[min(history.equity) * 0.999, max(history.equity) * 1.001],
+        ),
+        hoverlabel=dict(bgcolor="#FFFFFF", bordercolor="#E5E7EB", font=dict(color="#0F172A", size=11)),
+    )
+    return fig
+
+
 def _sector_donut(breakdown: dict[str, float]) -> go.Figure:
     fig = go.Figure(
         go.Pie(
@@ -446,15 +470,30 @@ def render_sidebar() -> None:
         try:
             acct: AccountSnapshot = load_account(settings)
             positions: list[PositionRow] = load_positions(settings)
+            history = load_equity_history(settings, period="1M", timeframe="1D")
         except Exception as e:  # noqa: BLE001
             st.error(f"Failed to load Alpaca account: {e}")
             return
 
-        # Hero equity, then Cash + Invested side by side
-        st.markdown(
-            _hero_metric("Total equity", f"${acct.equity:,.0f}"),
-            unsafe_allow_html=True,
-        )
+        # Hero equity with 1M P/L delta if we have history
+        delta = None
+        if history and history.base_value:
+            sign = "+" if history.pnl >= 0 else ""
+            cls = "gain" if history.pnl >= 0 else "loss"
+            delta = (
+                f"<span class='{cls}'>{sign}${history.pnl:,.0f} ({sign}{history.pnl_pct:.2f}%)</span>"
+                " <span style='color:var(--text-dim);'>· 1M</span>"
+            )
+        st.markdown(_hero_metric("Total equity", f"${acct.equity:,.0f}", delta), unsafe_allow_html=True)
+
+        # Equity sparkline (last month)
+        if history and len(history.equity) > 1:
+            st.plotly_chart(
+                _equity_sparkline(history),
+                use_container_width=True,
+                config={"displayModeBar": False},
+            )
+
         c1, c2 = st.columns(2)
         c1.markdown(
             _mini_metric("Cash", f"${acct.cash:,.0f}", f"{acct.cash_pct:.0f}% of equity"),
@@ -671,7 +710,7 @@ def render_chat() -> None:
 
     for msg in st.session_state.history:
         if isinstance(msg, HumanMessage):
-            with st.chat_message("user"):
+            with st.chat_message("user", avatar=USER_AVATAR):
                 st.markdown(msg.content)
         elif isinstance(msg, AIMessage) and msg.content and not msg.tool_calls:
             with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
@@ -695,7 +734,7 @@ def render_chat() -> None:
 
     user_msg = HumanMessage(content=prompt)
     st.session_state.history.append(user_msg)
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar=USER_AVATAR):
         st.markdown(prompt)
 
     with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):

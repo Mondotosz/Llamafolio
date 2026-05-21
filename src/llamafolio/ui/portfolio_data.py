@@ -6,10 +6,12 @@ needs a quick read on every rerun — the MCP server is reserved for the agents.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from functools import lru_cache
 
 import yfinance as yf
 from alpaca.trading.client import TradingClient
+from alpaca.trading.requests import GetPortfolioHistoryRequest
 
 from llamafolio.config import Settings
 
@@ -97,3 +99,58 @@ def sector_breakdown(positions: list[PositionRow]) -> dict[str, float]:
     for p in positions:
         out[p.sector] = out.get(p.sector, 0.0) + p.weight_pct
     return dict(sorted(out.items(), key=lambda kv: kv[1], reverse=True))
+
+
+@dataclass
+class EquityHistory:
+    timestamps: list[datetime]
+    equity: list[float]
+    base_value: float
+
+    @property
+    def pnl(self) -> float:
+        if not self.equity or not self.base_value:
+            return 0.0
+        return self.equity[-1] - self.base_value
+
+    @property
+    def pnl_pct(self) -> float:
+        if not self.base_value:
+            return 0.0
+        return self.pnl / self.base_value * 100
+
+
+def load_equity_history(
+    settings: Settings,
+    period: str = "1M",
+    timeframe: str = "1D",
+) -> EquityHistory | None:
+    """Return the account's equity curve.
+
+    Returns None if Alpaca rejects the request (e.g. fresh account with no
+    history yet) — the caller decides what to show.
+    """
+    client = _client(settings)
+    try:
+        hist = client.get_portfolio_history(
+            GetPortfolioHistoryRequest(period=period, timeframe=timeframe)
+        )
+    except Exception:  # noqa: BLE001
+        return None
+    if not hist.equity or not hist.timestamp:
+        return None
+    # Drop leading None values that Alpaca returns for sessions where no
+    # snapshot was taken yet.
+    equity = [e for e in hist.equity if e is not None]
+    timestamps = [
+        datetime.fromtimestamp(t, tz=timezone.utc)
+        for t, e in zip(hist.timestamp, hist.equity)
+        if e is not None
+    ]
+    if not equity:
+        return None
+    return EquityHistory(
+        timestamps=timestamps,
+        equity=equity,
+        base_value=float(hist.base_value or equity[0]),
+    )
