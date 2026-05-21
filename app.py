@@ -400,9 +400,26 @@ def render_chat() -> None:
     with st.chat_message("assistant"):
         status = st.status("Thinking...", expanded=True)
         graph = get_graph()
-        result = _loop().run_until_complete(
-            graph.ainvoke({"messages": st.session_state.history})
-        )
+        try:
+            result = _loop().run_until_complete(
+                graph.ainvoke({"messages": st.session_state.history})
+            )
+        except Exception as e:  # noqa: BLE001
+            status.update(label="Agent error", state="error", expanded=True)
+            msg = str(e)
+            if "tool_use_failed" in msg or "was not in request.tools" in msg:
+                hint = (
+                    "The LLM hallucinated a tool name not in its toolkit. "
+                    "Try rephrasing the question, or retry — this is a known "
+                    "Llama-3.3 limitation on complex agentic tasks."
+                )
+            else:
+                hint = "Try again, or check the logs for details."
+            st.error(f"**Agent failed.** {hint}\n\n```\n{msg[:600]}\n```")
+            # Roll back the user message so the next turn starts clean.
+            if st.session_state.history and isinstance(st.session_state.history[-1], HumanMessage):
+                st.session_state.history.pop()
+            return
         new_msgs = result["messages"][len(st.session_state.history) - 1 :]
 
         # 1) Live timeline of routing + tool calls
