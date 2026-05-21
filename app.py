@@ -87,10 +87,10 @@ section[data-testid="stSidebar"] { background: var(--surface-2); }
 [data-testid="stHeader"] { background: transparent; height: 0; }
 
 /* -- Brand header ----------------------------------------------------------*/
-.lf-brand { display: flex; align-items: center; gap: 0.75rem; }
-.lf-brand-mark {
-  width: 38px; height: 38px;
-  border-radius: 8px;
+.lf-brand { display: flex; flex-direction: column; gap: 0.25rem; }
+.lf-brand-lockup {
+  height: 38px;
+  width: auto;
   display: block;
 }
 .lf-brand-title { font-size: 1.2rem; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
@@ -322,16 +322,13 @@ st.markdown(CSS, unsafe_allow_html=True)
 # ----------------------------------------------------------------------------
 def render_header() -> None:
     col_brand, col_actions = st.columns([5, 1])
-    mark_b64 = _asset_b64("llamafolio-icon-premium.svg")
+    lockup_b64 = _asset_b64("llamafolio-horizontal-dark.svg")
     with col_brand:
         st.markdown(
             f"""
             <div class="lf-brand">
-              <img class="lf-brand-mark" src="data:image/svg+xml;base64,{mark_b64}" alt="Llamafolio"/>
-              <div>
-                <div class="lf-brand-title">Llamafolio</div>
-                <div class="lf-brand-sub">AI portfolio advisor &middot; Alpaca paper trading</div>
-              </div>
+              <img class="lf-brand-lockup" src="data:image/svg+xml;base64,{lockup_b64}" alt="Llamafolio"/>
+              <div class="lf-brand-sub">AI portfolio advisor &middot; Alpaca paper trading</div>
             </div>
             <span class="lf-status-pill">Paper &middot; gpt-oss 120b on Groq</span>
             """,
