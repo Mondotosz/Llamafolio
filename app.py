@@ -724,12 +724,22 @@ def _content_text(m) -> str:
 # Trade actions
 # ----------------------------------------------------------------------------
 def render_trade_actions(agent_msgs: list) -> None:
+    # If the executor already placed an order in this turn, the loop is
+    # closed — never surface a fresh Confirm/Refuse banner, even if some
+    # earlier message in the trace still contains a proposal block. This
+    # prevents the user from accidentally placing a duplicate order by
+    # clicking the banner that re-appears after the success message.
+    for m in agent_msgs:
+        if getattr(m, "name", None) == "executor":
+            text_low = _content_text(m).lower()
+            if "order placed" in text_low or "accepted" in text_low:
+                return
+
     trade = None
     for m in agent_msgs:
-        # Skip the executor's own messages — their success confirmation
-        # echoes back the symbol/side/quantity ('NVDA Side: SELL Notional:
-        # $1,823') and would re-trigger the banner, letting the user
-        # accidentally place the same order twice.
+        # Also skip executor messages while scanning for proposals — their
+        # success block echoes the symbol/side/quantity and would match
+        # the detector.
         if getattr(m, "name", None) == "executor":
             continue
         trade = detect_proposed_trade(_content_text(m))

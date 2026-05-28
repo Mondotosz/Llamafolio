@@ -96,15 +96,30 @@ def make_classifier_node(llm: BaseChatModel):
         question = _strip_context(_last_human_text(state["messages"]))
         if not question:
             return {"intent": "decline"}
+
+        # Cheap deterministic shortcut: confirmation phrases skip the
+        # classifier LLM entirely. Verbose Gemini outputs sometimes returned
+        # 'The intent is executor.' which broke the first-token parser and
+        # fell back to the expensive 'complex' chain when a single executor
+        # call was all we needed.
+        low = question.lower().strip()
+        if low.startswith(("confirm ", "execute ", "yes, ")) and any(
+            k in low for k in ("sell", "buy", "trim")
+        ):
+            return {"intent": "executor"}
+
         response = await llm.ainvoke([
             SystemMessage(content=classifier_prompt),
             HumanMessage(content=question),
         ])
         raw = _content_text(response).strip().lower()
-        # Take the first token; tolerate punctuation around it.
-        token = re.split(r"[\s,.]+", raw, maxsplit=1)[0]
-        intent = token if token in VALID_INTENTS else "complex"
-        return {"intent": intent}
+        # Robust parser: search the full response for any valid intent word,
+        # not just the first token. Gemini Flash Lite occasionally wraps the
+        # answer in a short sentence rather than emitting one bare word.
+        for candidate in VALID_INTENTS:
+            if re.search(rf"\b{candidate}\b", raw):
+                return {"intent": candidate}
+        return {"intent": "complex"}
 
     return classifier
 
