@@ -1,14 +1,23 @@
-"""Multi-agent portfolio advisor graph (supervisor pattern).
+"""Multi-agent portfolio advisor graph.
 
-Five agents:
-  - supervisor: routes the conversation, never calls tools
-  - portfolio_analyst: reads positions, sector exposure, concentration
-  - research_agent: news, fundamentals, market context, web search
-  - risk_manager: vol/beta/exposure check on a proposed trade
-  - executor: places/cancels/closes orders (only after explicit confirmation)
+`build_graph()` returns a compiled LangGraph runnable made of two layers:
 
-Each specialist gets a focused subset of tools to keep its prompt small —
-which keeps us under Groq's free-tier TPM ceiling.
+  1. An intent router (`llamafolio.agents.router`) sits in front and
+     classifies each user turn into one of seven paths — data, analyst,
+     research, risk, executor, complex or decline. Simple paths bypass
+     the supervisor entirely.
+  2. A `langgraph-supervisor` chain wires the four specialists for the
+     'complex' fallback path:
+       - supervisor       : routes between specialists, never calls tools
+       - portfolio_analyst: reads positions, sector exposure, concentration
+       - research_agent   : news, fundamentals, market context, web search
+       - risk_manager     : vol / beta / exposure check on a proposed trade
+       - executor         : places / cancels / closes orders (only after
+                            the user explicitly confirms a structured proposal)
+
+Each specialist receives a focused subset of tools — keeping individual
+prompts small enough to fit the free-tier token-per-minute caps on both
+Groq and Gemini.
 """
 from __future__ import annotations
 
@@ -21,14 +30,11 @@ from langchain_groq import ChatGroq
 from langgraph.prebuilt import create_react_agent
 from langgraph_supervisor import create_supervisor
 
+from llamafolio.agents.router import build_router_graph
 from llamafolio.config import Settings, load_settings
 from llamafolio.tools.alpaca_mcp import get_alpaca_tools
-from llamafolio.tools.tavily_search import TAVILY_TOOLS, web_search
-from llamafolio.tools.yfinance_tools import (
-    YFINANCE_TOOLS,
-    get_company_info,
-    get_fundamentals,
-)
+from llamafolio.tools.tavily_search import web_search
+from llamafolio.tools.yfinance_tools import get_company_info, get_fundamentals
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
@@ -86,14 +92,10 @@ def build_llm(settings: Settings) -> BaseChatModel:
     raise RuntimeError(f"Unknown LLM provider: {settings.llm_provider!r}")
 
 
-# Backwards-compat alias used elsewhere in this module.
-_llm = build_llm
-
-
 async def build_graph(settings: Settings | None = None):
-    """Build the multi-agent supervisor graph. Returns a compiled LangGraph app."""
+    """Build the multi-agent graph + router. Returns a compiled LangGraph app."""
     settings = settings or load_settings()
-    llm = _llm(settings)
+    llm = build_llm(settings)
     alpaca = await get_alpaca_tools(settings)
 
     # --- specialists --------------------------------------------------------
@@ -180,7 +182,6 @@ async def build_graph(settings: Settings | None = None):
     # decline) we bypass the supervisor entirely and route directly to the
     # right node. Only multi-step decisions (trim, rebalance, recommend) fall
     # through to the supervisor chain. See agents/router.py for the path map.
-    from llamafolio.agents.router import build_router_graph
     return build_router_graph(
         llm,
         analyst=analyst,
@@ -191,5 +192,4 @@ async def build_graph(settings: Settings | None = None):
     )
 
 
-# Convenience export -- unused tool lists kept for ad-hoc imports/tests
-__all__ = ["build_graph", "YFINANCE_TOOLS", "TAVILY_TOOLS"]
+__all__ = ["build_graph", "build_llm"]
