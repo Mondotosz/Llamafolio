@@ -737,58 +737,84 @@ def render_chat() -> None:
     with st.chat_message("user", avatar=USER_AVATAR):
         st.markdown(prompt)
 
-    with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
-        status = st.status("Thinking...", expanded=True)
-        graph = get_graph()
-        try:
-            result = _loop().run_until_complete(
-                graph.ainvoke({"messages": st.session_state.history})
+    # Streaming: render each agent message in its own bubble as soon as it
+    # arrives from LangGraph (stream_mode='updates'), and surface routing /
+    # tool-call steps in the timeline live. We drive the async generator
+    # synchronously by awaiting each chunk on the persistent session loop,
+    # so the cached graph and its MCP connections stay alive across yields.
+    loop = _loop()
+    graph = get_graph()
+    status = st.status("Thinking...", expanded=True)
+    agent_msgs: list = []
+    seen_ids: set[str] = set()
+
+    async def _anext(it):
+        return await it.__anext__()
+
+    agen = graph.astream(
+        {"messages": st.session_state.history},
+        stream_mode="updates",
+    )
+
+    try:
+        while True:
+            try:
+                chunk = loop.run_until_complete(_anext(agen))
+            except StopAsyncIteration:
+                break
+
+            for node_name, node_state in chunk.items():
+                if not isinstance(node_state, dict):
+                    continue
+                for m in node_state.get("messages", []):
+                    msg_id = getattr(m, "id", None) or str(id(m))
+                    if msg_id in seen_ids:
+                        continue
+                    seen_ids.add(msg_id)
+
+                    step = _step_label(m)
+                    if step:
+                        kind, body = step
+                        status.markdown(
+                            f"<div class='lf-step'>"
+                            f"<span class='lf-step-kind'>{kind}</span>{body}"
+                            f"</div>",
+                            unsafe_allow_html=True,
+                        )
+
+                    if (
+                        isinstance(m, AIMessage)
+                        and m.content
+                        and not m.tool_calls
+                        and not any(s in m.content.lower() for s in HANDOFF_NOISE)
+                    ):
+                        with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
+                            name = getattr(m, "name", None) or "supervisor"
+                            st.markdown(
+                                f"<span class='lf-agent-label'>{name.replace('_', ' ')}</span>",
+                                unsafe_allow_html=True,
+                            )
+                            st.markdown(m.content)
+                        st.session_state.history.append(m)
+                        agent_msgs.append(m)
+    except Exception as e:  # noqa: BLE001
+        status.update(label="Agent error", state="error", expanded=True)
+        err = str(e)
+        if "tool_use_failed" in err or "was not in request.tools" in err:
+            hint = (
+                "The LLM emitted an invalid tool call. Try rephrasing the "
+                "question, or retry — this is a known limitation."
             )
-        except Exception as e:  # noqa: BLE001
-            status.update(label="Agent error", state="error", expanded=True)
-            msg = str(e)
-            if "tool_use_failed" in msg or "was not in request.tools" in msg:
-                hint = (
-                    "The LLM emitted an invalid tool call. Try rephrasing the "
-                    "question, or retry — this is a known limitation."
-                )
-            elif "rate_limit" in msg.lower():
-                hint = "Provider rate limit reached. Try again in a minute, or switch model in .env."
-            else:
-                hint = "Try again, or check the logs."
-            st.error(f"**Agent failed.** {hint}\n\n```\n{msg[:600]}\n```")
-            if st.session_state.history and isinstance(st.session_state.history[-1], HumanMessage):
-                st.session_state.history.pop()
-            return
-
-        new_msgs = result["messages"][len(st.session_state.history) - 1 :]
-        for m in new_msgs:
-            step = _step_label(m)
-            if step:
-                kind, body = step
-                status.markdown(
-                    f"<div class='lf-step'>"
-                    f"<span class='lf-step-kind'>{kind}</span>{body}"
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
+        elif "rate_limit" in err.lower() or "resource_exhausted" in err.lower():
+            hint = "Provider rate limit reached. Try again in a minute, or switch model in .env."
+        else:
+            hint = "Try again, or check the logs."
+        st.error(f"**Agent failed.** {hint}\n\n```\n{err[:600]}\n```")
+        if st.session_state.history and isinstance(st.session_state.history[-1], HumanMessage):
+            st.session_state.history.pop()
+        return
+    finally:
         status.update(label="Done", state="complete", expanded=False)
-
-    agent_msgs = []
-    for m in new_msgs:
-        if (
-            isinstance(m, AIMessage) and m.content and not m.tool_calls
-            and not any(s in m.content.lower() for s in HANDOFF_NOISE)
-        ):
-            with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
-                name = getattr(m, "name", None) or "supervisor"
-                st.markdown(
-                    f"<span class='lf-agent-label'>{name.replace('_', ' ')}</span>",
-                    unsafe_allow_html=True,
-                )
-                st.markdown(m.content)
-            st.session_state.history.append(m)
-            agent_msgs.append(m)
 
     render_trade_actions(agent_msgs)
     st.markdown(
