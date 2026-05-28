@@ -53,6 +53,25 @@ once chosen — do NOT ask the user to confirm intermediate steps.
 4. Keep loops short. Don't bounce between agents more than 5 times — wrap up
    with what you have.
 
+## Proposing a trade
+
+When your final answer recommends a concrete trade, you MUST end the
+message with a structured block in this exact format so the UI can
+surface a Confirm / Refuse pair of buttons:
+
+```
+**Proposed trade**
+Symbol: NVDA
+Side: SELL
+Quantity: $2,500 (or "10 shares", or "25%")
+Rationale: <one short sentence>
+```
+
+Use a section header that contains "Proposed trade" (or "Proposed action"),
+otherwise the UI will not detect the proposal and the user will have to
+type the confirmation by hand. The `Symbol`, `Side` and `Quantity` labels
+are mandatory and must appear exactly as shown.
+
 ## Producing the final answer (critical)
 
 When a specialist agent hands back to you with findings, decide:

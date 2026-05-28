@@ -555,35 +555,45 @@ def render_sidebar() -> None:
 # ----------------------------------------------------------------------------
 # Trade detection
 # ----------------------------------------------------------------------------
-TRADE_TRIGGERS = ("proposed trade", "proposal", "recommendation", "trim", "rebalance")
+# A real proposed trade must come from a structured block — either the
+# explicit 'Proposed trade' / 'Proposed action' header, or a 'Symbol: X'
+# label pattern. Casual mentions of 'trim' or '%' in narrative prose must
+# NOT trigger the Confirm/Refuse banner.
+_PROPOSED_TRADE_HEADERS = (
+    "proposed trade",
+    "proposed action",
+    "recommended trade",
+)
+_LABEL_PATTERN = re.compile(
+    r"symbol[:\s]+([A-Z]{2,5})\b"
+    r".{0,200}?"
+    r"\b(buy|sell|trim|reduce)\b"
+    r".{0,200}?"
+    r"(?:quantity|qty|amount|size)[:\s]+([^\n]+?)(?:\n|$)",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def detect_proposed_trade(text: str) -> dict | None:
+    """Return a concrete trade dict only when the message contains a
+    structured proposal block. False positives on casual prose are not
+    acceptable — the banner injects a confirmation prompt on click."""
     if not text:
         return None
     low = text.lower()
-    if not any(t in low for t in TRADE_TRIGGERS):
+    if not any(h in low for h in _PROPOSED_TRADE_HEADERS):
         return None
-    sym_m = re.search(r"\b([A-Z]{1,5})\b\s*(?:\(|,|\.|$|\s)", text)
-    side_m = re.search(r"\b(buy|sell|trim|reduce)\b", text, re.IGNORECASE)
-    qty_pct = re.search(r"(\d+(?:\.\d+)?)\s*%", text)
-    qty_sh = re.search(r"(\d+(?:\.\d+)?)\s*share", text, re.IGNORECASE)
-    qty_usd = re.search(r"\$\s?(\d[\d,]*)", text)
-    if not (sym_m and side_m):
+    m = _LABEL_PATTERN.search(text)
+    if not m:
         return None
-    side = side_m.group(1).lower()
+    symbol, side, qty_raw = m.group(1), m.group(2).lower(), m.group(3).strip()
     if side in ("trim", "reduce"):
         side = "sell"
-    qty = None
-    if qty_pct:
-        qty = f"{qty_pct.group(1)}%"
-    elif qty_sh:
-        qty = f"{qty_sh.group(1)} shares"
-    elif qty_usd:
-        qty = f"${qty_usd.group(1)}"
+    # Clean up quantity formatting
+    qty = qty_raw.split("(")[0].strip().rstrip(".,")
     if not qty:
         return None
-    return {"symbol": sym_m.group(1), "side": side, "qty": qty}
+    return {"symbol": symbol.upper(), "side": side, "qty": qty}
 
 
 # ----------------------------------------------------------------------------
