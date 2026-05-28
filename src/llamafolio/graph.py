@@ -159,7 +159,7 @@ async def build_graph(settings: Settings | None = None):
         name="executor",
     )
 
-    # --- supervisor ---------------------------------------------------------
+    # --- supervisor (fallback for complex multi-step requests) -------------
     # output_mode="full_history" bubbles every sub-agent message (tool calls,
     # tool results, reasoning) up to the parent state. We rely on this in two
     # places:
@@ -168,13 +168,27 @@ async def build_graph(settings: Settings | None = None):
     #     preserved;
     #   - the Streamlit timeline shows the real chain of tool calls per
     #     specialist instead of just the handoff transitions.
-    supervisor = create_supervisor(
+    supervisor_compiled = create_supervisor(
         agents=[analyst, research, risk, executor],
         model=llm,
         prompt=_prompt("supervisor"),
         output_mode="full_history",
+    ).compile()
+
+    # --- router (cheap classifier that shortcuts to the simplest path) -----
+    # For most user questions (data display, single-specialist needs, polite
+    # decline) we bypass the supervisor entirely and route directly to the
+    # right node. Only multi-step decisions (trim, rebalance, recommend) fall
+    # through to the supervisor chain. See agents/router.py for the path map.
+    from llamafolio.agents.router import build_router_graph
+    return build_router_graph(
+        llm,
+        analyst=analyst,
+        research=research,
+        risk=risk,
+        executor=executor,
+        supervisor_graph=supervisor_compiled,
     )
-    return supervisor.compile()
 
 
 # Convenience export -- unused tool lists kept for ad-hoc imports/tests
