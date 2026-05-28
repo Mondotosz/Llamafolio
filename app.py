@@ -683,13 +683,33 @@ def _step_label(msg) -> tuple[str, str] | None:
 HANDOFF_NOISE = ("transferred back", "transferring back", "handing back")
 
 
+def _content_text(m) -> str:
+    """Extract text content from a LangChain message, handling both the
+    classic str shape and the newer list-of-parts shape that Gemini 3.x
+    uses (e.g. [{'type': 'text', 'text': '...'}])."""
+    c = getattr(m, "content", "") or ""
+    if isinstance(c, str):
+        return c
+    if isinstance(c, list):
+        parts: list[str] = []
+        for chunk in c:
+            if isinstance(chunk, str):
+                parts.append(chunk)
+            elif isinstance(chunk, dict):
+                text = chunk.get("text") or chunk.get("content") or ""
+                if isinstance(text, str):
+                    parts.append(text)
+        return "".join(parts)
+    return str(c)
+
+
 # ----------------------------------------------------------------------------
 # Trade actions
 # ----------------------------------------------------------------------------
 def render_trade_actions(agent_msgs: list) -> None:
     trade = None
     for m in agent_msgs:
-        trade = detect_proposed_trade(m.content)
+        trade = detect_proposed_trade(_content_text(m))
         if trade:
             break
     if not trade:
@@ -732,15 +752,15 @@ def render_chat() -> None:
     for msg in st.session_state.history:
         if isinstance(msg, HumanMessage):
             with st.chat_message("user", avatar=USER_AVATAR):
-                st.markdown(msg.content)
-        elif isinstance(msg, AIMessage) and msg.content and not msg.tool_calls:
+                st.markdown(_content_text(msg))
+        elif isinstance(msg, AIMessage) and _content_text(msg) and not msg.tool_calls:
             with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
                 name = getattr(msg, "name", None) or "supervisor"
                 st.markdown(
                     f"<span class='lf-agent-label'>{name.replace('_', ' ')}</span>",
                     unsafe_allow_html=True,
                 )
-                st.markdown(msg.content)
+                st.markdown(_content_text(msg))
 
     typed = st.chat_input("Ask anything about your portfolio.")
     pending = st.session_state.pop("pending_input", None)
@@ -842,11 +862,12 @@ def render_chat() -> None:
                             unsafe_allow_html=True,
                         )
 
+                    text = _content_text(m)
                     if (
                         isinstance(m, AIMessage)
-                        and m.content
+                        and text
                         and not m.tool_calls
-                        and not any(s in m.content.lower() for s in HANDOFF_NOISE)
+                        and not any(s in text.lower() for s in HANDOFF_NOISE)
                     ):
                         with st.chat_message("assistant", avatar=ASSISTANT_AVATAR):
                             name = getattr(m, "name", None) or "supervisor"
@@ -854,7 +875,7 @@ def render_chat() -> None:
                                 f"<span class='lf-agent-label'>{name.replace('_', ' ')}</span>",
                                 unsafe_allow_html=True,
                             )
-                            st.markdown(m.content)
+                            st.markdown(text)
                         st.session_state.history.append(m)
                         agent_msgs.append(m)
     except Exception as e:  # noqa: BLE001
