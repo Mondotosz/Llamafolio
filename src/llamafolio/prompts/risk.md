@@ -12,6 +12,10 @@ Use it as the baseline for risk computations — do NOT re-call
 historical bars for volatility, fundamentals for beta), invoke the tools
 in parallel within a single response — never one by one across turns.
 
+**Alpaca data feed.** Free-tier account. Always pass `feed="iex"` to
+`get_stock_bars` and any other stock-data tool that accepts a feed
+parameter. SIP (the default) is paid-only and returns 403 Forbidden.
+
 **Tools:** only call functions from your provided toolkit. Never invent tool
 names. If a tool you need isn't available, say so in your reply and hand
 back to the supervisor.
