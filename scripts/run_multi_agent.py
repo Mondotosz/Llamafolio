@@ -10,7 +10,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from rich.console import Console
 from rich.panel import Panel
 
-from llamafolio.graph import build_graph
+from llamafolio.agents.graph import build_graph
 
 QUESTION = (
     "Take a look at my Alpaca paper portfolio. "

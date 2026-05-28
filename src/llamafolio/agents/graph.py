@@ -30,7 +30,7 @@ from llamafolio.tools.yfinance_tools import (
     get_fundamentals,
 )
 
-PROMPTS_DIR = Path(__file__).parent / "prompts"
+PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 
 def _prompt(name: str) -> str:

@@ -11,7 +11,7 @@ from langchain_core.tools import BaseTool
 from langgraph.prebuilt import create_react_agent
 
 from llamafolio.config import Settings, load_settings
-from llamafolio.graph import build_llm
+from llamafolio.agents.graph import build_llm
 from llamafolio.tools.alpaca_mcp import get_alpaca_tools
 from llamafolio.tools.tavily_search import TAVILY_TOOLS
 from llamafolio.tools.yfinance_tools import YFINANCE_TOOLS

@@ -27,7 +27,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from rich.console import Console
 from rich.table import Table
 
-from llamafolio.graph import build_graph
+from llamafolio.agents.graph import build_graph
 
 DATASET_PATH = Path(__file__).parent.parent / "tests" / "eval_dataset.json"
 RESULTS_PATH = Path(__file__).parent.parent / "tests" / "eval_results.json"
