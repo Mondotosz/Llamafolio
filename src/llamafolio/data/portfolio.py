@@ -1,7 +1,10 @@
-"""Sync helpers to fetch portfolio state for the Streamlit sidebar.
+"""Sync portfolio data access.
 
-We use the sync alpaca-py SDK here (not the MCP path) because the sidebar just
-needs a quick read on every rerun — the MCP server is reserved for the agents.
+We use the sync alpaca-py SDK here (not the MCP path) because the host
+just needs a quick read before each agent turn — the MCP server is
+reserved for the agents themselves. This module is intentionally free
+of UI / LangChain / agentic concerns; everything it exposes is plain
+dataclasses and pure functions.
 """
 from __future__ import annotations
 

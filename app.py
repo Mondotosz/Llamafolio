@@ -18,7 +18,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from llamafolio.config import load_settings
 from llamafolio.graph import build_graph
-from llamafolio.ui.portfolio_data import (
+from llamafolio.data import (
     AccountSnapshot,
     EquityHistory,
     PositionRow,
