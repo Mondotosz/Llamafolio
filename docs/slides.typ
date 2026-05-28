@@ -11,9 +11,7 @@
     institution: [HEIG-VD · Cours IA générative],
     logo: image("../assets/llamafolio-icon-light.svg", width: 1.5cm),
   ),
-  config-common(
-    handout: false,
-  ),
+  config-common(handout: false),
 )
 
 #set text(lang: "fr")
@@ -21,16 +19,21 @@
 #title-slide()
 
 
+// ============================================================================
 = Cas d'usage
+// ============================================================================
 
 == Le problème
 
-Un investisseur particulier dispose de plusieurs sources d'information :
-prix, fondamentaux, actualités, contexte macro. Aucun broker ne les
-combine nativement, et l'analyse de concentration sectorielle reste hors
-de portée pour la plupart.
+Un investisseur particulier dispose de plusieurs sources d'information
+disparates : prix, fondamentaux, actualités, contexte macro.
 
-#v(1em)
+#v(0.8em)
+
+Aucun broker ne les combine nativement, et l'analyse de concentration
+sectorielle reste hors de portée pour la plupart.
+
+#v(0.8em)
 
 #alternatives[
   - Trop de tableaux à croiser
@@ -51,45 +54,70 @@ Llamafolio combine en une seule conversation :
 - *L'exécution simulée* après confirmation explicite
 
 #v(0.6em)
-*Cible* : investisseur particulier curieux ou étudiant en finance — pas
-un trader professionnel.
+
+*Cible* : investisseur particulier curieux ou étudiant en finance —
+pas un trader professionnel.
 
 
+// ============================================================================
 = Architecture
+// ============================================================================
 
-== Le pattern superviseur
+== Deux couches : router + supervisor
 
 #align(center)[
   #block(
     stroke: 0.5pt + rgb("#444444"),
     radius: 4pt,
     inset: 10pt,
-    width: 90%,
+    width: 95%,
   )[
-    #set text(font: "DejaVu Sans Mono", size: 9pt)
+    #set text(font: "DejaVu Sans Mono", size: 8pt)
     #align(left)[
 ```
-                  ┌─────────────────┐
-   user ────────► │   supervisor    │ ─── réponse finale
-                  └────────┬────────┘
-                           │ transfer_to_*
-       ┌──────────┬────────┴────────┬──────────┐
-       ▼          ▼                 ▼          ▼
-  ┌────────┐ ┌─────────┐    ┌────────┐ ┌──────────┐
-  │analyst │ │research │    │  risk  │ │ executor │
-  └────────┘ └─────────┘    └────────┘ └──────────┘
+                          ┌────────────────────┐
+   user ─────────────────►│  intent router     │   (1 LLM call)
+                          └─┬──────────────────┘
+                            │
+        ┌──────────┬────────┼────────┬──────────┬──────────┐
+        ▼          ▼        ▼        ▼          ▼          ▼
+       data    analyst   research   risk    executor    complex
+       (0 LLM)  (2 LLM)   (2 LLM)  (2 LLM)  (2 LLM)   (6-12 LLM)
+                                                       │
+                                                       │  supervisor
+                                                       │  chain
+                                                       ▼
+                                              réponse + Confirm/Refuse
 ```
     ]
   ]
 ]
 
-#v(0.4em)
-
-Chaque spécialiste a un prompt versionné en Markdown et un sous-ensemble
-d'outils dédié.
+Un _intent router_ classifie chaque tour ; seuls les 10 % de requêtes
+complexes empruntent la chaîne supervisor.
 
 
-== Stack et justifications
+== Sept chemins, sept coûts
+
+#table(
+  columns: (auto, auto, auto, 1fr),
+  inset: 5pt,
+  stroke: 0.5pt + rgb("#666666"),
+  align: (left, right, right, left),
+  table.header(
+    [*Intent*], [*LLM calls*], [*Latence*], [*Exemple*],
+  ),
+  [`data`],     [1],     [\~1 s],  [« Qu'y a-t-il dans mon portefeuille ? »],
+  [`analyst`],  [2],     [\~5 s],  [« Analyse mon exposition sectorielle »],
+  [`research`], [2],     [\~6 s],  [« News sur NVDA »],
+  [`risk`],     [2],     [\~5 s],  [« Quel est le risque de NVDA ? »],
+  [`complex`],  [6–12],  [\~30 s], [« Trim avec recherche et risque »],
+  [`executor`], [2],     [\~4 s],  [« confirm sell NVDA \$1 800 »],
+  [`decline`],  [1],     [\~1 s],  [Hors scope],
+)
+
+
+== Stack
 
 #table(
   columns: (auto, 1fr),
@@ -97,99 +125,149 @@ d'outils dédié.
   stroke: 0.5pt + rgb("#666666"),
   align: left,
   table.header([*Couche*], [*Choix · Raison*]),
-  [LLM], [Groq · Llama 3.3 70B / gpt-oss-120b — gratuit, rapide],
-  [Orchestration], [LangGraph + supervisor — pattern multi-agent reconnu],
+  [LLM], [Gemini 3.1 Flash Lite · Groq gpt-oss-120b — _dual provider_ via `.env`],
+  [Orchestration], [LangGraph + `langgraph-supervisor` — _streaming_ ready],
   [Trading], [Alpaca paper — sémantique réaliste, gratuit],
-  [Outils], [`alpaca-mcp-server` via MCP — angle non vu en cours],
-  [Recherche], [Tavily + yfinance — couverture web et fondamentaux],
-  [UI], [Streamlit + Plotly — démo claire en quelques heures],
+  [Outils], [`alpaca-mcp-server` via MCP — *angle non vu en cours*],
+  [Recherche], [Tavily + yfinance — web et fondamentaux],
+  [UI], [Streamlit + Plotly + Typst],
 )
 
 
-== L'élément expérimenté : MCP
+== Éléments expérimentés au-delà du cours
 
-Le _Model Context Protocol_ permet d'exposer un serveur d'outils tiers à
-n'importe quel LLM compatible. On lance `alpaca-mcp-server` en
-_subprocess stdio_, et on importe ses outils dans LangGraph via
-`langchain-mcp-adapters`.
+#v(0.4em)
 
-#v(0.6em)
++ *Model Context Protocol* : intégration d'un serveur d'outils tiers
+  (`alpaca-mcp-server`) lancé en _subprocess stdio_ via `uvx`, importé
+  dans LangGraph par `langchain-mcp-adapters`.
 
-Avantages :
-- Outils maintenus par Alpaca, pas par nous
-- Switch trivial vers `live trading` (changer une variable d'env)
-- Réutilisable par d'autres clients MCP (Claude Desktop, Cursor, etc.)
++ *Intent router pré-superviseur* : un classifier (1 LLM call)
+  shortcircuite les requêtes simples vers un agent unique ou un rendu
+  déterministe sans LLM. Réduit la latence de 30 s à 1–5 s pour 90 %
+  des requêtes.
+
++ *Pré-injection du contexte portefeuille* : un _read_ Alpaca côté
+  serveur fournit l'analyste en données ; il n'a plus besoin de
+  10 _round-trips_ MCP pour décrire le portefeuille.
 
 
+== L'architecture comme levier de coût
+
+#table(
+  columns: (1fr, auto, auto, auto),
+  inset: 6pt,
+  stroke: 0.5pt + rgb("#666666"),
+  align: (left, right, right, right),
+  table.header(
+    [*Configuration*], [*Round-trips*], [*Latence*], [*Coût\**],
+  ),
+  [Multi-agent naïf], [15–20], [30–60 s], [\$0.005],
+  [+ pré-fetch contexte], [10–14], [20 s], [\$0.003],
+  [+ tool calls parallèles], [6–10], [15 s], [\$0.002],
+  [*+ intent router (moy. pondérée)*], [*1–2*], [*3 s*], [*\$0.0005*],
+)
+
+#text(size: 12pt, fill: rgb("#888888"))[
+  \* Estimation par tour, Gemini 2.5 Flash Lite paid avec _prompt
+  caching_. Pour 1 000 tours/mois/utilisateur : \~\$0.50 — viable B2C
+  à marge >95 %.
+]
+
+
+// ============================================================================
 = Démonstration
+// ============================================================================
 
-== Scénario
+== Scénario en direct
 
-#v(1em)
++ Question : « _Suggest one trim with research and risk check, do not execute_ »
++ La chaîne complète s'exécute : analyste → recherche → risque
++ Le superviseur émet un bloc structuré :
+  ```
+  Proposed trade
+  Symbol: NVDA · Side: SELL · Quantity: $1,800
+  Rationale: ...
+  ```
++ Une bannière *Confirm / Refuse* apparaît sous la réponse
++ Clic Confirm → l'_intent router_ détecte « confirm sell NVDA … » →
+  l'exécuteur place l'ordre paper et retourne l'ID
 
-+ Question : « _Analyse mon exposition sectorielle_ »
-+ L'analyste détecte la concentration tech ($approx$ 48%)
-+ Question : « _Propose une trim avec recherche et risque_ »
-+ La recherche + le risque produisent une proposition
-+ Un binôme #emph[Confirm / Refuse] apparaît
-+ Clic → l'exécuteur place l'ordre paper
-
-#v(0.6em)
+#v(0.5em)
 
 #text(fill: rgb("#888888"))[
   _Vidéo de secours disponible en cas de problème réseau._
 ]
 
 
+// ============================================================================
 = Analyse critique
+// ============================================================================
 
 == Limites techniques
 
-- *Hallucination d'outils* (Llama 3.3 invente des noms de fonctions)
-  → mitigation : température basse, prompt strict, _retry_ exponentiel
-- *Limites de débit gratuit* (8–12 k tokens/min, 100 k/jour)
-  → mitigation : _backoff_ automatique, _free tier_ insuffisant pour
-  un usage soutenu
-- *Couverture _eval_ minimale* (16 cas, _substring matching_)
-  → une version industrielle utiliserait des centaines de cas + _LLM-as-judge_
+- *Gemini _thinking_ incompatible avec supervisor* :
+  les modèles 2.5/3.x _thinking_ exigent un `thought_signature` sur les
+  `functionCall` historiques, que `langgraph-supervisor` ne fournit pas.
+  → fix : utiliser les variantes `flash-lite` non-_thinking_.
+
+- *Limites de débit gratuites* : Groq 8–12 k TPM, Gemini 10–20 RPM.
+  → fix : optimisations architecturales ramènent la moyenne à
+  ~2 _round-trips_ par tour.
+
+- *Eval volontairement minimale* : 16 cas, _substring matching_.
+  → version industrielle : centaines de cas + _LLM-as-judge_.
 
 
 == Dimension éthique
 
-- *Sur-confiance du modèle* : tendance à formuler des observations comme
-  des recommandations, malgré l'instruction contraire
-- *Pas un produit régulé* : ne respecte pas les obligations MiFID II /
-  FINMA d'évaluation d'adéquation ; le _disclaimer_ ne dispense pas
-  d'un encadrement professionnel
-- *Biais des sources* : news Alpaca essentiellement anglo-saxonnes
+- *Sur-confiance du modèle* : tendance à formuler observations comme
+  recommandations. Dangereux sur un produit financier réel.
+
+- *Pas un produit régulé* : aucune obligation MiFID II / FINMA
+  d'évaluation d'adéquation. Le _disclaimer_ ne dispense pas
+  d'encadrement professionnel.
+
+- *Boucle de confirmation trop fluide* : un clic suffit. Une étape
+  « justifier le trade » forcerait une décision plus réfléchie.
+
+- *Biais linguistique* : news Alpaca quasi-exclusivement anglo-saxonnes.
 
 
 == Améliorations envisagées
 
-- *Streaming temps réel* (LangGraph `astream_events`)
-- *LLM-as-judge* sur la qualité des sorties
+- *_LLM-as-judge_* sur la qualité des sorties (au-delà du _substring_)
 - *Backtest historique* sur les recommandations passées
-- *Mémoire persistante* via _checkpointer_ + Postgres
-- *Boutons d'action enrichis* (édition de la quantité avant confirmation)
+- *Mémoire persistante* via LangGraph _checkpointer_ + Postgres
+- *_Prompt caching_* explicite des system prompts (diviserait encore le
+  coût input par ~4×)
+- *Multilingue documenté* : valoriser la capacité multilingue native des
+  modèles utilisés
 
 
+// ============================================================================
 = Conclusion
+// ============================================================================
 
-== En résumé
+== Ce que démontre Llamafolio
 
-Llamafolio démontre qu'un POC GenAI sérieux est possible *gratuitement*
-si on accepte les limites du _free tier_ :
++ Un POC GenAI agentic *sérieux et gratuit* en respectant les _free
+  tiers_.
+
++ *L'architecture pèse plus lourd que le provider* dans l'optimisation
+  des coûts : passer de 6 à 2 _round-trips_ par tour divise le coût par
+  3× et la latence par 5×.
+
++ *La sécurité est architecturale* : proposition structurée +
+  confirmation explicite + exécuteur isolé. Pas un _disclaimer_.
+
++ *Industrialisable* : code modulaire (17 modules focalisés), _dual
+  provider_, _eval_ automatique, identité visuelle complète.
 
 #v(0.6em)
 
-- Architecture *multi-agents* propre, prompts versionnés
-- Intégration *MCP* avec un serveur officiel tiers
-- Couche de sécurité : *aucun ordre sans confirmation explicite*
-- *Eval comportementale* couvrant routing, outils, faits, sécurité
-
-#v(0.8em)
-
-#text(weight: 700)[Dépôt :] #link("https://github.com/Vicolet/IAG-AI-Trademaxxing")
+#text(weight: 700)[Dépôt :]
+#link("https://github.com/Vicolet/IAG-AI-Trademaxxing")
 
 
 == Questions ?
@@ -197,7 +275,7 @@ si on accepte les limites du _free tier_ :
 #v(2em)
 
 #align(center)[
-  #text(size: 24pt, weight: 700)[Merci.]
+  #text(size: 30pt, weight: 700)[Merci.]
   #v(0.5em)
-  #text(fill: rgb("#888888"))[Q&A]
+  #text(fill: rgb("#888888"), size: 14pt)[Q&A]
 ]
