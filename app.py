@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import re
+import time
 from pathlib import Path
 
 import plotly.graph_objects as go
@@ -322,6 +323,20 @@ button[kind="primary"]:hover { background: #1E293B !important; }
   border-top: 1px solid var(--border);
   text-align: center;
 }
+
+.lf-metrics {
+  display: flex; gap: 0.85rem; justify-content: flex-end; flex-wrap: wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem; color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+.lf-metric-chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  background: var(--surface);
+}
+.lf-metric-chip b { color: var(--text); font-weight: 600; margin-right: 0.2rem; }
 
 /* responsive — collapse agent grid on narrow screens */
 @media (max-width: 1200px) {
@@ -773,6 +788,13 @@ def render_chat() -> None:
     agent_msgs: list = []
     seen_ids: set[str] = set()
 
+    # Per-turn metrics: counts visible-tool calls (excluding handoffs),
+    # LLM round-trips (= each AIMessage emitted by a model), agents touched,
+    # and total wall-clock time. Surfaced as a small footer chip row so the
+    # cost-optimisation gains are visible to the user, not just in logs.
+    metrics = {"agents": set(), "tool_calls": 0, "llm_calls": 0}
+    t_start = time.perf_counter()
+
     async def _anext(it):
         return await it.__anext__()
 
@@ -796,6 +818,19 @@ def render_chat() -> None:
                     if msg_id in seen_ids:
                         continue
                     seen_ids.add(msg_id)
+
+                    # Metrics: every AIMessage = one LLM round-trip. Every
+                    # non-handoff tool_call inside it counts as a real tool
+                    # call. Track the set of agents touched too.
+                    if isinstance(m, AIMessage):
+                        metrics["llm_calls"] += 1
+                        name = getattr(m, "name", None)
+                        if name:
+                            metrics["agents"].add(name)
+                        for tc in (m.tool_calls or []):
+                            t = tc["name"]
+                            if not (t.startswith("transfer_to_") or t.startswith("transfer_back")):
+                                metrics["tool_calls"] += 1
 
                     step = _step_label(m)
                     if step:
@@ -842,6 +877,20 @@ def render_chat() -> None:
         status.update(label="Done", state="complete", expanded=False)
 
     render_trade_actions(agent_msgs)
+
+    # Per-turn metrics footer so the cost-optimisation gains are visible.
+    elapsed = time.perf_counter() - t_start
+    n_agents = len(metrics["agents"] - {"supervisor"})
+    st.markdown(
+        f"<div class='lf-metrics'>"
+        f"<span class='lf-metric-chip'><b>{n_agents}</b>specialists</span>"
+        f"<span class='lf-metric-chip'><b>{metrics['tool_calls']}</b>tool calls</span>"
+        f"<span class='lf-metric-chip'><b>{metrics['llm_calls']}</b>LLM round-trips</span>"
+        f"<span class='lf-metric-chip'><b>{elapsed:.1f}s</b>total</span>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
     st.markdown(
         "<div class='lf-disclaimer'>Paper trading account &middot; informational only &middot; not investment advice.</div>",
         unsafe_allow_html=True,
