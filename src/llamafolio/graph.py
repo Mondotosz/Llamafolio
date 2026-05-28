@@ -69,11 +69,19 @@ def build_llm(settings: Settings) -> BaseChatModel:
                 "LLM_PROVIDER=gemini but GOOGLE_API_KEY is missing from the .env. "
                 "Get a free key at https://aistudio.google.com/apikey"
             )
+        # thinking_budget=0 disables Gemini 2.5's thinking mode. We MUST do
+        # this for langgraph-supervisor: thinking models require every prior
+        # functionCall in the conversation to carry a 'thought_signature',
+        # but the supervisor synthesises handoff tool calls
+        # (transfer_to_*, transfer_back_to_supervisor) without one, which
+        # makes Gemini reject the next request with 400 INVALID_ARGUMENT.
+        # Disabling thinking sidesteps the signature requirement.
         return ChatGoogleGenerativeAI(
             model=settings.gemini_model,
             google_api_key=settings.google_api_key,
             temperature=0.1,
             max_retries=5,
+            thinking_budget=0,
         )
     raise RuntimeError(f"Unknown LLM provider: {settings.llm_provider!r}")
 
