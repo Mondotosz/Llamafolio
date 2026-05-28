@@ -24,6 +24,7 @@ from llamafolio.ui.portfolio_data import (
     load_account,
     load_equity_history,
     load_positions,
+    render_portfolio_context,
     sector_breakdown,
 )
 
@@ -737,10 +738,29 @@ def render_chat() -> None:
     if not prompt:
         return
 
+    # Store the original prompt in history for display, but send a wrapped
+    # version (with auto-fetched portfolio context) to the graph. This is
+    # the core cost optimisation: one Alpaca read on the host fills the
+    # LLM's context with everything the analyst would otherwise fetch via
+    # 10+ MCP tool round-trips.
     user_msg = HumanMessage(content=prompt)
     st.session_state.history.append(user_msg)
     with st.chat_message("user", avatar=USER_AVATAR):
         st.markdown(prompt)
+
+    settings = load_settings()
+    try:
+        ctx = render_portfolio_context(
+            load_account(settings),
+            load_positions(settings),
+            load_equity_history(settings, period="1D", timeframe="1Min"),
+        )
+        wrapped_prompt = f"{ctx}\n\nUser question: {prompt}"
+    except Exception:  # noqa: BLE001
+        # If pre-fetch fails, fall back to the raw prompt; specialists can
+        # still call their tools.
+        wrapped_prompt = prompt
+    message_list = [*st.session_state.history[:-1], HumanMessage(content=wrapped_prompt)]
 
     # Streaming: render each agent message in its own bubble as soon as it
     # arrives from LangGraph (stream_mode='updates'), and surface routing /
@@ -757,7 +777,7 @@ def render_chat() -> None:
         return await it.__anext__()
 
     agen = graph.astream(
-        {"messages": st.session_state.history},
+        {"messages": message_list},
         stream_mode="updates",
     )
 

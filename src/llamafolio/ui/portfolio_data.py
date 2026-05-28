@@ -154,3 +154,52 @@ def load_equity_history(
         equity=equity,
         base_value=float(hist.base_value or equity[0]),
     )
+
+
+def render_portfolio_context(
+    account: AccountSnapshot,
+    positions: list[PositionRow],
+    history: EquityHistory | None = None,
+) -> str:
+    """Compact markdown context block that the supervisor / specialists can
+    use *instead of* re-fetching account + positions + sectors on every turn.
+
+    This is the core cost optimisation: a single Alpaca read on the host
+    fills the LLM's context with everything the analyst would otherwise
+    fetch through ~10 round-trips of MCP tool calls.
+    """
+    sectors = sector_breakdown(positions)
+    lines: list[str] = [
+        "<portfolio_context>",
+        "Auto-fetched server-side. Use this instead of querying "
+        "get_account_info / get_all_positions / get_fundamentals unless you "
+        "explicitly need a value that is not in the table below.",
+        "",
+        f"Total equity: ${account.equity:,.0f}",
+        f"Cash: ${account.cash:,.0f} ({account.cash_pct:.1f}% of equity)",
+        f"Invested capital: ${account.invested:,.0f}",
+    ]
+    if history is not None and history.base_value:
+        sign = "+" if history.pnl >= 0 else ""
+        lines.append(
+            f"Day P/L: {sign}${history.pnl:,.0f} ({sign}{history.pnl_pct:.2f}%)"
+        )
+    lines += ["", "Positions:"]
+    if not positions:
+        lines.append("- (no open positions)")
+    else:
+        lines.append("| Symbol | Value | % invested | Sector | P/L |")
+        lines.append("|---|---|---|---|---|")
+        for p in positions:
+            sign = "+" if p.plpc >= 0 else ""
+            lines.append(
+                f"| {p.symbol} | ${p.market_value:,.0f} | {p.weight_pct:.1f}% | "
+                f"{p.sector} | {sign}{p.plpc:.2f}% |"
+            )
+        lines += ["", "Sector exposure (of invested capital):"]
+        invested = sum(p.market_value for p in positions) or 1.0
+        for sector, raw_weight_pct in sectors.items():
+            # sectors() returns weight as % of invested already (sum=100).
+            lines.append(f"- {sector}: {raw_weight_pct:.1f}%")
+    lines.append("</portfolio_context>")
+    return "\n".join(lines)
