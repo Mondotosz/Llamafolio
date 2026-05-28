@@ -666,11 +666,18 @@ SUGGESTIONS = [
 
 
 def render_suggestions(key_prefix: str = "sug") -> None:
+    def _set_pending(q: str) -> None:
+        st.session_state["pending_input"] = q
+
     cols = st.columns(len(SUGGESTIONS))
     for col, (label, query) in zip(cols, SUGGESTIONS):
-        if col.button(label, use_container_width=True, key=f"{key_prefix}_{label}"):
-            st.session_state["pending_input"] = query
-            st.rerun()
+        col.button(
+            label,
+            use_container_width=True,
+            key=f"{key_prefix}_{label}",
+            on_click=_set_pending,
+            args=(query,),
+        )
 
 
 # ----------------------------------------------------------------------------
@@ -719,6 +726,12 @@ def _content_text(m) -> str:
 def render_trade_actions(agent_msgs: list) -> None:
     trade = None
     for m in agent_msgs:
+        # Skip the executor's own messages — their success confirmation
+        # echoes back the symbol/side/quantity ('NVDA Side: SELL Notional:
+        # $1,823') and would re-trigger the banner, letting the user
+        # accidentally place the same order twice.
+        if getattr(m, "name", None) == "executor":
+            continue
         trade = detect_proposed_trade(_content_text(m))
         if trade:
             break
@@ -732,19 +745,36 @@ def render_trade_actions(agent_msgs: list) -> None:
         f"</div></div>",
         unsafe_allow_html=True,
     )
+    # Use on_click callbacks rather than the if-block + st.rerun() pattern.
+    # When the banner is rendered at the very end of a streaming turn, an
+    # explicit st.rerun() inside the if-block sometimes leaves Streamlit in
+    # a state where the click is registered but the rerun never starts —
+    # the user clicks Confirm and nothing visible happens. Callbacks fire
+    # before the natural rerun and are robust to that timing.
+    def _confirm():
+        st.session_state["pending_input"] = (
+            f"confirm {trade['side']} {trade['symbol']} {trade['qty']}"
+        )
+
+    def _refuse():
+        st.session_state["pending_input"] = (
+            f"do not execute the proposed {trade['side']} of {trade['symbol']}. close the loop."
+        )
+
     c1, c2, _ = st.columns([1, 1, 4])
-    with c1:
-        if st.button("Confirm", type="primary", key=f"confirm_{trade['symbol']}", use_container_width=True):
-            st.session_state["pending_input"] = (
-                f"confirm {trade['side']} {trade['symbol']} {trade['qty']}"
-            )
-            st.rerun()
-    with c2:
-        if st.button("Refuse", key=f"refuse_{trade['symbol']}", use_container_width=True):
-            st.session_state["pending_input"] = (
-                f"do not execute the proposed {trade['side']} of {trade['symbol']}. close the loop."
-            )
-            st.rerun()
+    c1.button(
+        "Confirm",
+        type="primary",
+        key=f"confirm_{trade['symbol']}",
+        use_container_width=True,
+        on_click=_confirm,
+    )
+    c2.button(
+        "Refuse",
+        key=f"refuse_{trade['symbol']}",
+        use_container_width=True,
+        on_click=_refuse,
+    )
 
 
 # ----------------------------------------------------------------------------
