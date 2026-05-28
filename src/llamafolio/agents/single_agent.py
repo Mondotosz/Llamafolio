@@ -8,10 +8,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from langchain_core.tools import BaseTool
-from langchain_groq import ChatGroq
 from langgraph.prebuilt import create_react_agent
 
 from llamafolio.config import Settings, load_settings
+from llamafolio.graph import build_llm
 from llamafolio.tools.alpaca_mcp import get_alpaca_tools
 from llamafolio.tools.tavily_search import TAVILY_TOOLS
 from llamafolio.tools.yfinance_tools import YFINANCE_TOOLS
@@ -21,14 +21,6 @@ PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "single_agent.md"
 
 def load_system_prompt() -> str:
     return PROMPT_PATH.read_text(encoding="utf-8")
-
-
-def build_llm(settings: Settings) -> ChatGroq:
-    return ChatGroq(
-        model=settings.groq_model,
-        api_key=settings.groq_api_key,
-        temperature=0.2,
-    )
 
 
 async def collect_tools(settings: Settings) -> list[BaseTool]:

@@ -14,7 +14,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import BaseTool
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langgraph.prebuilt import create_react_agent
 from langgraph_supervisor import create_supervisor
@@ -41,24 +43,43 @@ def _by_name(tools: list[BaseTool], names: list[str]) -> list[BaseTool]:
     return [by_name[n] for n in names if n in by_name]
 
 
-def _llm(settings: Settings) -> ChatGroq:
-    """Build the LLM with bumped retry budget for transient Groq rate limits.
+def build_llm(settings: Settings) -> BaseChatModel:
+    """Build the LLM, dispatching on settings.llm_provider.
 
-    Groq's free tier enforces a per-minute token budget (8k–12k TPM
-    depending on the model). The underlying Groq SDK already retries 429s
-    with exponential backoff; we bump `max_retries` from the default of 2
-    to 5 so a multi-agent run can absorb a couple of TPM hits per turn.
-
-    Note: we deliberately do NOT wrap the model with `.with_retry(...)` —
-    that would return a Runnable that lacks `bind_tools()`, which
-    `create_react_agent` needs.
+    Both providers are wrapped through the standard LangChain chat-model
+    interface so the rest of the graph stays agnostic. We deliberately do
+    NOT wrap with `.with_retry(...)` — that would return a Runnable that
+    lacks `bind_tools()`, which `create_react_agent` needs. Each SDK
+    already retries 429s internally; we just bump max_retries.
     """
-    return ChatGroq(
-        model=settings.groq_model,
-        api_key=settings.groq_api_key,
-        temperature=0.1,
-        max_retries=5,
-    )
+    if settings.llm_provider == "groq":
+        if not settings.groq_api_key:
+            raise RuntimeError(
+                "LLM_PROVIDER=groq but GROQ_API_KEY is missing from the .env."
+            )
+        return ChatGroq(
+            model=settings.groq_model,
+            api_key=settings.groq_api_key,
+            temperature=0.1,
+            max_retries=5,
+        )
+    if settings.llm_provider == "gemini":
+        if not settings.google_api_key:
+            raise RuntimeError(
+                "LLM_PROVIDER=gemini but GOOGLE_API_KEY is missing from the .env. "
+                "Get a free key at https://aistudio.google.com/apikey"
+            )
+        return ChatGoogleGenerativeAI(
+            model=settings.gemini_model,
+            google_api_key=settings.google_api_key,
+            temperature=0.1,
+            max_retries=5,
+        )
+    raise RuntimeError(f"Unknown LLM provider: {settings.llm_provider!r}")
+
+
+# Backwards-compat alias used elsewhere in this module.
+_llm = build_llm
 
 
 async def build_graph(settings: Settings | None = None):
