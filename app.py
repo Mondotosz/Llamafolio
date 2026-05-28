@@ -337,6 +337,11 @@ st.markdown(CSS, unsafe_allow_html=True)
 # ----------------------------------------------------------------------------
 def render_header() -> None:
     lockup_b64 = _asset_b64("llamafolio-horizontal-dark.svg")
+    settings = load_settings()
+    if settings.llm_provider == "gemini":
+        model_label = f"{settings.gemini_model} on Gemini"
+    else:
+        model_label = f"{settings.groq_model} on Groq"
     col_brand, col_pill, col_actions = st.columns([3, 2, 1], gap="medium", vertical_alignment="center")
     with col_brand:
         st.markdown(
@@ -349,10 +354,10 @@ def render_header() -> None:
         )
     with col_pill:
         st.markdown(
-            "<div style='text-align:right;'>"
-            "<span class='lf-status-pill'><span class='lf-status-dot'></span>"
-            "Paper &middot; gpt-oss 120b on Groq</span>"
-            "</div>",
+            f"<div style='text-align:right;'>"
+            f"<span class='lf-status-pill'><span class='lf-status-dot'></span>"
+            f"Paper &middot; {model_label}</span>"
+            f"</div>",
             unsafe_allow_html=True,
         )
     with col_actions:
