@@ -862,8 +862,16 @@ def render_chat() -> None:
     # LLM round-trips (= each AIMessage emitted by a model), agents touched,
     # and total wall-clock time. Surfaced as a small footer chip row so the
     # cost-optimisation gains are visible to the user, not just in logs.
+    #
+    # Pre-compute the input message ids so we can ignore them while
+    # counting: when a router subgraph re-emits history as part of its
+    # updates, those old messages would otherwise inflate the agent /
+    # round-trip totals and hide the real cost of the current turn.
     metrics = {"agents": set(), "tool_calls": 0, "llm_calls": 0}
     t_start = time.perf_counter()
+    input_msg_ids = {
+        getattr(m, "id", None) for m in message_list if getattr(m, "id", None)
+    }
 
     async def _anext(it):
         return await it.__anext__()
@@ -888,6 +896,16 @@ def render_chat() -> None:
                     if msg_id in seen_ids:
                         continue
                     seen_ids.add(msg_id)
+
+                    # Don't count messages that were already in the input
+                    # to the graph — when a subgraph re-emits history as
+                    # part of its updates (the executor specialist returns
+                    # the full conversation including prior agents' turns),
+                    # those old messages would otherwise inflate the
+                    # counters and mask the real cost of this turn.
+                    is_history = msg_id in input_msg_ids
+                    if is_history:
+                        continue
 
                     # Metrics: every AIMessage = one LLM round-trip. Every
                     # non-handoff tool_call inside it counts as a real tool
