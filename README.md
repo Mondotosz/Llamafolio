@@ -118,27 +118,55 @@ The app is then served at <http://localhost:8501>.
 
 ```
 .
-├── app.py                          # Streamlit entry point
-├── pyproject.toml                  # Project + deps (uv)
-├── .env.example                    # Template for required secrets
+├── app.py                            # Streamlit entry point (thin shim)
+├── pyproject.toml                    # Project + deps (uv)
+├── .env.example                      # Template for required secrets
 ├── .streamlit/
-│   └── config.toml                 # Light theme
-├── src/llamafolio/
-│   ├── config.py                   # Typed env loader
-│   ├── graph.py                    # Multi-agent supervisor graph
-│   ├── agents/
-│   │   └── single_agent.py         # Fallback single-agent baseline
-│   ├── tools/
-│   │   ├── alpaca_mcp.py           # Alpaca MCP server adapter
-│   │   ├── tavily_search.py        # Tavily web search tool
-│   │   └── yfinance_tools.py       # Fundamentals + company info
-│   ├── prompts/                    # Versioned agent prompts (.md)
-│   └── ui/
-│       └── portfolio_data.py       # Sync helpers for the dashboard
-├── scripts/                        # Smoke tests + seeders
-└── docs/
-    └── architecture.md             # Architecture overview
+│   └── config.toml                   # Light theme
+├── assets/                           # Brand kit (logo lockups, icons, avatars)
+├── docs/
+│   ├── architecture.md               # Technical overview
+│   ├── rapport.typ                   # 2-3 page report (FR, Typst)
+│   └── slides.typ                    # 10-min slide deck (FR, Typst + Touying)
+├── scripts/                          # CLI utilities (verb-prefixed)
+│   ├── check_alpaca.py
+│   ├── check_mcp.py
+│   ├── check_tools.py
+│   ├── seed_portfolio.py
+│   ├── run_single_agent.py
+│   ├── run_multi_agent.py
+│   └── run_eval.py
+├── src/llamafolio/                   # Package source (src/ layout)
+│   ├── config.py                     # Typed .env loader
+│   ├── prompts/                      # Versioned agent prompts (Markdown)
+│   ├── agents/                       # Agentic core
+│   │   ├── graph.py                  #   build_graph entry point
+│   │   ├── router.py                 #   intent router (pre-classifier)
+│   │   └── single_agent.py           #   fallback baseline
+│   ├── tools/                        # LangChain tools
+│   │   ├── alpaca_mcp.py             #   Alpaca MCP server adapter
+│   │   ├── tavily_search.py          #   web search
+│   │   └── yfinance_tools.py         #   fundamentals + company info
+│   ├── data/                         # Pure data access (no UI, no LangChain)
+│   │   └── portfolio.py              #   Alpaca + yfinance sync helpers
+│   └── ui/                           # Streamlit UI (one module per surface)
+│       ├── main.py                   #   composes the page
+│       ├── styles.py                 #   CSS
+│       ├── assets.py                 #   static paths + base64 helper
+│       ├── messages.py               #   LangChain message helpers
+│       ├── charts.py                 #   Plotly sparkline + donut
+│       ├── header.py                 #   top brand band
+│       ├── sidebar.py                #   portfolio dashboard
+│       ├── empty_state.py            #   welcome + agent grid + chips
+│       ├── trade_detector.py         #   parses structured proposals
+│       └── chat.py                   #   streaming turn + banner + metrics
+└── tests/
+    └── eval_dataset.json             # Behavioural eval cases
 ```
+
+The `src/` layout keeps every importable artefact under
+`src/llamafolio/`; the root only carries the Streamlit entry point and
+top-level config.
 
 ---
 
@@ -153,6 +181,25 @@ The app is then served at <http://localhost:8501>.
 | `scripts/run_single_agent.py` | Run the single-agent fallback (CLI, no UI) |
 | `scripts/run_multi_agent.py` | Run the multi-agent supervisor graph (CLI, no UI) |
 | `scripts/run_eval.py` | Score the multi-agent on `tests/eval_dataset.json` |
+
+---
+
+## Building the report and slides
+
+The report (`docs/rapport.typ`) and slides (`docs/slides.typ`) are
+authored in [Typst](https://typst.app/). Install the CLI once
+(`brew install typst` on macOS, `cargo install --locked typst-cli` on
+Linux, or your distro's package), then from the repository root:
+
+```bash
+typst compile docs/rapport.typ docs/rapport.pdf
+typst compile docs/slides.typ docs/slides.pdf
+```
+
+Use `typst watch <path>` for hot reload while iterating. The slides
+depend on the [`touying`](https://typst.app/universe/package/touying)
+package; Typst downloads it automatically from Typst Universe on the
+first compile.
 
 ---
 
