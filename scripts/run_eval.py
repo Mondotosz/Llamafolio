@@ -141,10 +141,20 @@ async def _run_case(graph, case: dict) -> CaseScore:
         )
 
 
-async def main_async(limit: int | None, category_filter: str | None) -> None:
+async def main_async(
+    limit: int | None,
+    category_filter: str | None,
+    case_ids: list[str] | None,
+) -> None:
     console = Console()
     dataset = json.loads(DATASET_PATH.read_text(encoding="utf-8"))
     cases = dataset["cases"]
+    if case_ids:
+        wanted = set(case_ids)
+        cases = [c for c in cases if c["id"] in wanted]
+        missing = wanted - {c["id"] for c in cases}
+        if missing:
+            console.print(f"[yellow]unknown case ids: {', '.join(sorted(missing))}[/yellow]")
     if category_filter:
         cases = [c for c in cases if category_filter in c["category"]]
     if limit:
@@ -208,8 +218,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=None, help="Run only the first N cases")
     parser.add_argument("--filter", type=str, default=None, help="Run cases whose category contains this string")
+    parser.add_argument(
+        "--cases",
+        type=str,
+        default=None,
+        help="Comma-separated list of case ids to run (e.g. analyst-sector-exposure,research-single-ticker)",
+    )
     args = parser.parse_args()
-    asyncio.run(main_async(args.limit, args.filter))
+    case_ids = [c.strip() for c in args.cases.split(",")] if args.cases else None
+    asyncio.run(main_async(args.limit, args.filter, case_ids))
 
 
 if __name__ == "__main__":
