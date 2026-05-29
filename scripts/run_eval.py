@@ -28,6 +28,13 @@ from rich.console import Console
 from rich.table import Table
 
 from llamafolio.agents.graph import build_graph
+from llamafolio.config import load_settings
+from llamafolio.data import (
+    load_account,
+    load_equity_history,
+    load_positions,
+    render_portfolio_context,
+)
 
 DATASET_PATH = Path(__file__).parent.parent / "tests" / "eval_dataset.json"
 RESULTS_PATH = Path(__file__).parent.parent / "tests" / "eval_results.json"
@@ -137,11 +144,28 @@ def _score_case(case: dict, messages: list) -> dict:
     }
 
 
+def _wrap_with_portfolio_context(question: str) -> str:
+    """Reproduce the UI's pre-fetch + injection so the eval exercises the
+    same prompt shape that production turns receive. Falls back to the raw
+    question if Alpaca cannot be reached."""
+    try:
+        settings = load_settings()
+        ctx = render_portfolio_context(
+            load_account(settings),
+            load_positions(settings),
+            load_equity_history(settings, period="1D", timeframe="1Min"),
+        )
+        return f"{ctx}\n\nUser question: {question}"
+    except Exception:  # noqa: BLE001
+        return question
+
+
 async def _run_case(graph, case: dict) -> CaseScore:
     start = time.perf_counter()
     try:
+        wrapped = _wrap_with_portfolio_context(case["question"])
         result = await graph.ainvoke(
-            {"messages": [HumanMessage(content=case["question"])]}
+            {"messages": [HumanMessage(content=wrapped)]}
         )
         elapsed = time.perf_counter() - start
         s = _score_case(case, result["messages"])
