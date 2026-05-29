@@ -1,6 +1,13 @@
 #import "@preview/touying:0.5.5": *
 #import themes.metropolis: *
 
+#let LL_BLUE = rgb("#0F4C81")
+#let LL_RED = rgb("#DC2626")
+#let LL_GREEN = rgb("#16A34A")
+#let LL_GREY = rgb("#64748B")
+#let LL_BG = rgb("#F1F5F9")
+#let LL_AMBER = rgb("#FEF3C7")
+
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
   config-info(
@@ -16,108 +23,154 @@
 
 #set text(lang: "fr")
 
+#let big-card(body, fill: LL_BG, w: 90%) = block(
+  fill: fill,
+  inset: 1.1em,
+  radius: 8pt,
+  width: w,
+  body,
+)
+
+#let section-banner(num, title, time) = align(center + horizon)[
+  #v(-1em)
+  #text(size: 18pt, fill: LL_GREY)[Partie #num / 4]
+  #v(0.4em)
+  #text(size: 48pt, weight: 700, fill: LL_BLUE)[#title]
+  #v(0.3em)
+  #text(size: 16pt, fill: LL_GREY)[#time]
+]
+
+
 // ----------------------------------------------------------------------------
 // 1 — TITLE
 // ----------------------------------------------------------------------------
-
 #title-slide()
 
 
-// ============================================================================
-= Cas d'usage
-// ============================================================================
-
 // ----------------------------------------------------------------------------
-// 2 — Le problème
+// SECTION 1 — Cas d'usage (2 min)
 // ----------------------------------------------------------------------------
-== Le problème
-
-#v(1.5em)
-
-#align(center)[
-  #text(size: 22pt, weight: 500)[
-    L'investisseur particulier doit *jongler* avec :
-  ]
+#slide[
+  #section-banner("1", [Cas d'usage], [2 minutes])
 ]
 
-#v(1.2em)
 
-#align(center)[
+#slide[
+  #set align(horizon)
+
+  #align(center)[
+    #text(size: 28pt, weight: 500)[
+      L'investisseur particulier doit *jongler* avec :
+    ]
+  ]
+
+  #v(1.5em)
+
   #grid(
-    columns: 3,
-    column-gutter: 2em,
-    align: center,
-    text(size: 18pt, weight: 700)[💼 Broker],
-    text(size: 18pt, weight: 700)[📰 News],
-    text(size: 18pt, weight: 700)[📊 Fondamentaux],
-    text(size: 13pt, fill: rgb("#888"))[positions, équité],
-    text(size: 13pt, fill: rgb("#888"))[macro, sentiment],
-    text(size: 13pt, fill: rgb("#888"))[P/E, bêta, secteur],
+    columns: (1fr, 1fr, 1fr),
+    column-gutter: 1.2em,
+    big-card(w: 100%, fill: LL_BG)[
+      #align(center)[
+        #text(size: 22pt, weight: 700)[Broker]
+        #v(0.3em)
+        #text(size: 14pt, fill: LL_GREY)[positions, équité]
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #align(center)[
+        #text(size: 22pt, weight: 700)[News]
+        #v(0.3em)
+        #text(size: 14pt, fill: LL_GREY)[macro, sentiment]
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #align(center)[
+        #text(size: 22pt, weight: 700)[Fondamentaux]
+        #v(0.3em)
+        #text(size: 14pt, fill: LL_GREY)[P/E, bêta, secteur]
+      ]
+    ],
   )
+
+  #v(1.8em)
+
+  #align(center)[
+    #text(size: 36pt, weight: 700, fill: LL_BLUE)[
+      Aucun outil ne les combine.
+    ]
+  ]
 ]
 
-#v(1.5em)
 
-#align(center)[
-  #text(size: 26pt, weight: 700, fill: rgb("#0F4C81"))[
-    Aucun outil ne les *combine*.
+#slide[
+  #set align(horizon)
+
+  #align(center)[
+    #text(size: 22pt, weight: 500)[
+      #text(weight: 700, fill: LL_BLUE)[Llamafolio] combine en *une seule conversation* :
+    ]
+  ]
+
+  #v(1.2em)
+
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
+    row-gutter: 0.8em,
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 18pt, weight: 700)[Analyse]\
+      #text(size: 13pt, fill: LL_GREY)[exposition sectorielle, concentration]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 18pt, weight: 700)[Recherche]\
+      #text(size: 13pt, fill: LL_GREY)[news, fondamentaux, web]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 18pt, weight: 700)[Risque]\
+      #text(size: 13pt, fill: LL_GREY)[volatilité, bêta, taille de position]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 18pt, weight: 700)[Exécution simulée]\
+      #text(size: 13pt, fill: LL_GREY)[uniquement après confirmation]
+    ],
+  )
+
+  #v(1.2em)
+
+  #align(center)[
+    #text(size: 14pt, fill: LL_GREY)[
+      Cible : investisseur curieux ou étudiant en finance — pas un professionnel.
+    ]
   ]
 ]
 
 
 // ----------------------------------------------------------------------------
-// 3 — La solution
+// SECTION 2 — Architecture (2 min)
 // ----------------------------------------------------------------------------
-== Une seule conversation
-
-#v(0.5em)
-
-#align(center)[
-  #text(size: 18pt)[
-    *Llamafolio* combine en une seule conversation :
-  ]
-]
-
-#v(0.8em)
-
-#table(
-  columns: (1fr,),
-  inset: 10pt,
-  stroke: 0.5pt + rgb("#E5E7EB"),
-  align: center,
-  [#text(size: 16pt)[#text(weight: 700)[Analyse] · exposition sectorielle, concentration]],
-  [#text(size: 16pt)[#text(weight: 700)[Recherche] · news, fondamentaux, web]],
-  [#text(size: 16pt)[#text(weight: 700)[Risque] · volatilité, bêta, taille de position]],
-  [#text(size: 16pt)[#text(weight: 700)[Exécution simulée] · uniquement après confirmation]],
-)
-
-#v(0.8em)
-
-#align(center)[
-  #text(size: 14pt, fill: rgb("#888"))[
-    Cible : investisseur curieux ou étudiant en finance — pas un pro.
-  ]
+#slide[
+  #section-banner("2", [Architecture technique], [2 minutes])
 ]
 
 
-// ============================================================================
-= Architecture technique
-// ============================================================================
+#slide[
+  #set align(horizon)
 
-// ----------------------------------------------------------------------------
-// 4 — Schéma archi
-// ----------------------------------------------------------------------------
-== Router + supervisor : 2 couches
+  #align(center)[
+    #text(size: 22pt, weight: 700)[Router + supervisor : 2 couches]
+  ]
 
-#align(center)[
-  #block(
-    stroke: 0.5pt + rgb("#444"),
-    radius: 4pt,
-    inset: 10pt,
-    width: 95%,
-  )[
-    #set text(font: "DejaVu Sans Mono", size: 9pt)
-    #align(left)[
+  #v(0.6em)
+
+  #align(center)[
+    #block(
+      stroke: 1pt + LL_BLUE,
+      radius: 6pt,
+      inset: 14pt,
+      width: 96%,
+    )[
+      #set text(font: "DejaVu Sans Mono", size: 10pt)
+      #align(left)[
 ```
                        ┌──────────────────┐
    user ──────────────►│  intent router   │   1 LLM call
@@ -132,293 +185,374 @@
 
    * garde structurel programmatique
 ```
-    ]
-  ]
-]
-
-#v(0.8em)
-
-#align(center)[
-  #text(size: 18pt, weight: 700, fill: rgb("#0F4C81"))[
-    9 round-trips → 2.3 ·  ×4 d'économie
-  ]
-]
-
-
-// ----------------------------------------------------------------------------
-// 5 — Stack et données
-// ----------------------------------------------------------------------------
-== Stack et données
-
-#v(0.5em)
-
-#grid(
-  columns: 2,
-  column-gutter: 1.5em,
-  [
-    *Stack*
-    #v(0.4em)
-    - *LangGraph* · supervisor pattern
-    - *Gemini 3.1 Flash Lite* · Groq en secours
-    - *Alpaca MCP* · 60+ outils
-    - *Streamlit* · streaming UI
-  ],
-  [
-    *Données (live, jamais statiques)*
-    #v(0.4em)
-    - *Alpaca* · positions, équité, ordres
-    - *Alpaca market* · prix, news
-    - *yfinance* · P/E, bêta, secteur
-    - *Tavily* · recherche web macro
-  ],
-)
-
-#v(0.8em)
-
-#align(center)[
-  #block(
-    fill: rgb("#F1F5F9"),
-    inset: 0.9em,
-    radius: 6pt,
-    width: 90%,
-  )[
-    #text(size: 14pt)[
-      *Au-delà du cours :* Model Context Protocol · intent router ·
-      pré-fetch du contexte
-    ]
-  ]
-]
-
-
-// ============================================================================
-= Démonstration
-// ============================================================================
-
-// ----------------------------------------------------------------------------
-// 6 — Démo screencast
-// ----------------------------------------------------------------------------
-== Démo (3 min)
-
-#v(2em)
-
-#align(center)[
-  #block(
-    stroke: 1pt + rgb("#444"),
-    radius: 8pt,
-    inset: 2em,
-    width: 75%,
-    height: 8em,
-  )[
-    #align(center + horizon)[
-      #text(size: 28pt, weight: 700, fill: rgb("#0F4C81"))[
-        🎥 Screencast
       ]
-      #v(0.5em)
-      #text(size: 14pt, fill: rgb("#888"))[
-        data · complex · garde sécurité · multilingue
+    ]
+  ]
+
+  #v(0.8em)
+
+  #align(center)[
+    #big-card(w: 80%, fill: LL_BG)[
+      #align(center)[
+        #text(size: 28pt, weight: 700, fill: LL_BLUE)[
+          9 round-trips  →  2.3
+        ]
+        #v(0.2em)
+        #text(size: 16pt, fill: LL_GREY)[
+          ×4 d'économie sans changer de modèle
+        ]
       ]
     ]
   ]
 ]
 
-#v(1em)
 
-#align(center)[
-  #text(size: 12pt, fill: rgb("#888"))[
-    _Vidéo lue ici en plein écran._
+#slide[
+  #set align(horizon)
+
+  #align(center)[
+    #text(size: 22pt, weight: 700)[Stack et données]
   ]
-]
 
+  #v(0.8em)
 
-// ============================================================================
-= Analyse critique
-// ============================================================================
-
-// ----------------------------------------------------------------------------
-// 7 — Limites techniques
-// ----------------------------------------------------------------------------
-== Limites techniques
-
-#v(0.6em)
-
-- *Gemini _thinking_ × supervisor : incompatible.*
-  Mitigation : `thinking_budget=0`, variantes `flash-lite` non-_thinking_.
-
-- *_Rate limits_ gratuits.*
-  Gemini 15 RPM / 500 RPD. Notre archi (~2 _round-trips_/tour) reste
-  viable, mais limite atteinte sur les _runs_ d'eval intensifs.
-
-- *_Substring matching_ vs sémantique.*
-  L'_eval_ détecte les régressions structurelles ; un _LLM-as-judge_
-  comblerait le gap sur la qualité narrative.
-
-- *Couverture eval minimale.*
-  18 cas suffisent à trouver les bugs majeurs — et ont d'ailleurs
-  trouvé la faille executor.
-
-
-// ----------------------------------------------------------------------------
-// 8 — La faille trouvée par l'eval
-// ----------------------------------------------------------------------------
-== La faille trouvée par l'eval
-
-#v(0.8em)
-
-#grid(
-  columns: 2,
-  column-gutter: 2em,
-  align: center,
-  [
-    #text(size: 16pt, weight: 700)[Avant patch]
-    #v(0.6em)
-    #text(size: 56pt, weight: 700, fill: rgb("#DC2626"))[0.00]
-    #v(0.3em)
-    #text(size: 13pt, fill: rgb("#888"))[
-      « confirm » seul → ordre passé\
-      « confirm sell NVDA \$1500 » → ordre passé
-    ]
-  ],
-  [
-    #text(size: 16pt, weight: 700)[Après patch]
-    #v(0.6em)
-    #text(size: 56pt, weight: 700, fill: rgb("#16A34A"))[1.00]
-    #v(0.3em)
-    #text(size: 13pt, fill: rgb("#888"))[
-      Refus déterministe, ~1.4s\
-      _zéro_ appel LLM, _zéro_ appel tool
-    ]
-  ],
-)
-
-#v(1em)
-
-#align(center)[
-  #block(
-    fill: rgb("#FEF3C7"),
-    inset: 0.8em,
-    radius: 6pt,
-    width: 88%,
-  )[
-    #text(size: 14pt)[
-      *Leçon :* sur la sécurité, la règle qui vaut est celle écrite en
-      *Python*, pas celle écrite en anglais dans un prompt.
-    ]
-  ]
-]
-
-
-// ----------------------------------------------------------------------------
-// 9 — Améliorations envisagées
-// ----------------------------------------------------------------------------
-== Améliorations envisagées
-
-#v(0.6em)
-
-- *_LLM-as-judge_* sur la qualité des sorties, au-delà du _substring
-  matching_.
-
-- *Cas adversariaux* : _prompt injection_ via news, confirmations
-  multilingues forgées, blocs structurés forgés en `HumanMessage`.
-
-- *CI GitHub Actions* : _lint_, _type-check_, _eval_ automatique à
-  chaque PR avec _badge_.
-
-- *Mémoire persistante* via LangGraph _checkpointer_ + Postgres pour
-  garder l'historique des recommandations entre sessions.
-
-- *_Backtest_ historique* : faire tourner les recommandations sur des
-  dates passées et mesurer le _hit rate_.
-
-
-// ----------------------------------------------------------------------------
-// 10 — Dimension éthique
-// ----------------------------------------------------------------------------
-== Dimension éthique
-
-#v(0.6em)
-
-- *Sur-confiance du modèle* : tendance à formuler observations comme
-  recommandations. Dangereux sur un produit financier réel.
-
-- *Pas un produit régulé* : aucune obligation MiFID II / FINMA
-  d'évaluation d'adéquation. Le _disclaimer_ ne dispense pas d'un
-  encadrement professionnel.
-
-- *Boucle de confirmation trop fluide* : un clic suffit. Une étape
-  « justifier le trade » forcerait une décision réfléchie.
-
-- *Biais des sources* : news Alpaca essentiellement anglo-saxonnes.
-
-- *Coût environnemental* : un tour _complex_ ≈ 50 k tokens. Le router
-  l'atténue en évitant la chaîne quand inutile.
-
-
-// ============================================================================
-= Conclusion
-// ============================================================================
-
-// ----------------------------------------------------------------------------
-// 11 — Conclusion
-// ----------------------------------------------------------------------------
-== Ce que démontre Llamafolio
-
-#v(1em)
-
-#align(center)[
   #grid(
-    columns: 1,
+    columns: (1fr, 1fr),
+    column-gutter: 1.5em,
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 18pt, weight: 700, fill: LL_BLUE)[Stack]
+      #v(0.4em)
+      #text(size: 13pt)[
+        *LangGraph* · supervisor pattern\
+        *Gemini 3.1 Flash Lite* · Groq en secours\
+        *Alpaca MCP* · 60+ outils\
+        *Streamlit* · streaming UI
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 18pt, weight: 700, fill: LL_BLUE)[Données (live)]
+      #v(0.4em)
+      #text(size: 13pt)[
+        *Alpaca* · positions, équité, ordres\
+        *Alpaca market* · prix, news\
+        *yfinance* · P/E, bêta, secteur\
+        *Tavily* · recherche web macro
+      ]
+    ],
+  )
+
+  #v(1em)
+
+  #align(center)[
+    #big-card(w: 92%, fill: LL_AMBER)[
+      #align(center)[
+        #text(size: 15pt)[
+          *Au-delà du cours :* Model Context Protocol · intent router · pré-fetch du contexte
+        ]
+      ]
+    ]
+  ]
+]
+
+
+// ----------------------------------------------------------------------------
+// SECTION 3 — Démo (3 min)
+// ----------------------------------------------------------------------------
+#slide[
+  #section-banner("3", [Démonstration], [3 minutes])
+]
+
+
+#slide[
+  #set align(horizon)
+
+  #align(center)[
+    #block(
+      stroke: 2pt + LL_BLUE,
+      radius: 10pt,
+      inset: 3em,
+      width: 80%,
+    )[
+      #align(center)[
+        #text(size: 56pt, weight: 700, fill: LL_BLUE)[Screencast]
+        #v(0.6em)
+        #text(size: 18pt, fill: LL_GREY)[
+          data · complex · garde sécurité · multilingue
+        ]
+      ]
+    ]
+  ]
+
+  #v(1em)
+
+  #align(center)[
+    #text(size: 12pt, fill: LL_GREY)[
+      _Vidéo lue ici en plein écran._
+    ]
+  ]
+]
+
+
+// ----------------------------------------------------------------------------
+// SECTION 4 — Analyse critique (3 min)
+// ----------------------------------------------------------------------------
+#slide[
+  #section-banner("4", [Analyse critique], [3 minutes])
+]
+
+
+#slide[
+  #set align(horizon)
+
+  #align(center)[
+    #text(size: 22pt, weight: 700)[Limites techniques]
+  ]
+
+  #v(0.6em)
+
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
     row-gutter: 0.8em,
-    block(
-      fill: rgb("#F1F5F9"),
-      inset: 1em,
-      radius: 6pt,
-      width: 85%,
-    )[
-      #text(size: 18pt, weight: 700)[
-        L'architecture pèse plus lourd que le provider.
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 15pt, weight: 700)[Gemini _thinking_ × supervisor]
+      #v(0.3em)
+      #text(size: 12pt, fill: LL_GREY)[
+        Incompatible : `thought_signature` manquante.
+        Fix : `thinking_budget=0`.
       ]
     ],
-    block(
-      fill: rgb("#F1F5F9"),
-      inset: 1em,
-      radius: 6pt,
-      width: 85%,
-    )[
-      #text(size: 18pt, weight: 700)[
-        La sécurité est architecturale, pas un _disclaimer_.
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 15pt, weight: 700)[Rate limits gratuits]
+      #v(0.3em)
+      #text(size: 12pt, fill: LL_GREY)[
+        Gemini 15 RPM / 500 RPD.
+        Notre archi (~2 round-trips) reste viable.
       ]
     ],
-    block(
-      fill: rgb("#F1F5F9"),
-      inset: 1em,
-      radius: 6pt,
-      width: 85%,
-    )[
-      #text(size: 18pt, weight: 700)[
-        L'eval trouve les bugs que les prompts cachent.
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 15pt, weight: 700)[Substring matching]
+      #v(0.3em)
+      #text(size: 12pt, fill: LL_GREY)[
+        Détecte les régressions structurelles.
+        LLM-as-judge compléterait sur la qualité.
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 15pt, weight: 700)[Couverture eval minimale]
+      #v(0.3em)
+      #text(size: 12pt, fill: LL_GREY)[
+        18 cas — suffisants pour trouver la faille
+        executor. Insuffisants en production.
       ]
     ],
   )
 ]
 
-#v(0.8em)
 
-#align(center)[
-  #text(size: 12pt, fill: rgb("#888"))[
-    Dépôt : #link("https://github.com/Vicolet/IAG-AI-Trademaxxing")
+#slide[
+  #set align(horizon)
+
+  #align(center)[
+    #text(size: 22pt, weight: 700)[La faille trouvée par l'eval]
+  ]
+
+  #v(0.8em)
+
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 2em,
+    align: center,
+    [
+      #text(size: 18pt, weight: 700)[Avant patch]
+      #v(0.6em)
+      #text(size: 76pt, weight: 700, fill: LL_RED)[0.00]
+      #v(0.4em)
+      #text(size: 13pt, fill: LL_GREY)[
+        « confirm » seul → ordre passé\
+        « confirm sell NVDA \$1500 » → ordre passé
+      ]
+    ],
+    [
+      #text(size: 18pt, weight: 700)[Après patch]
+      #v(0.6em)
+      #text(size: 76pt, weight: 700, fill: LL_GREEN)[1.00]
+      #v(0.4em)
+      #text(size: 13pt, fill: LL_GREY)[
+        Refus déterministe, \~1.4 s\
+        zéro LLM, zéro tool call
+      ]
+    ],
+  )
+
+  #v(1em)
+
+  #align(center)[
+    #big-card(w: 90%, fill: LL_AMBER)[
+      #align(center)[
+        #text(size: 16pt)[
+          *Leçon :* sur la sécurité, la règle qui vaut est celle écrite\
+          en *Python*, pas celle écrite en anglais dans un _prompt_.
+        ]
+      ]
+    ]
   ]
 ]
 
 
-// ----------------------------------------------------------------------------
-// 12 — Q&A
-// ----------------------------------------------------------------------------
-== Questions ?
+#slide[
+  #set align(horizon)
 
-#v(2.5em)
+  #align(center)[
+    #text(size: 22pt, weight: 700)[Améliorations envisagées]
+  ]
 
-#align(center)[
-  #text(size: 56pt, weight: 700)[Merci.]
   #v(0.6em)
-  #text(size: 18pt, fill: rgb("#888"))[Q & R]
+
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
+    row-gutter: 0.7em,
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 14pt, weight: 700, fill: LL_BLUE)[ML]
+      #v(0.2em)
+      #text(size: 12pt)[
+        LLM-as-judge sur la qualité narrative\
+        Backtest historique des recommandations
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 14pt, weight: 700, fill: LL_BLUE)[Sécurité]
+      #v(0.2em)
+      #text(size: 12pt)[
+        Cas adversariaux étendus\
+        Sanitization des news (anti _prompt injection_)
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 14pt, weight: 700, fill: LL_BLUE)[MLOps]
+      #v(0.2em)
+      #text(size: 12pt)[
+        GitHub Actions CI avec badge eval\
+        Prompt caching explicite
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 14pt, weight: 700, fill: LL_BLUE)[Produit]
+      #v(0.2em)
+      #text(size: 12pt)[
+        Mémoire persistante (LangGraph + Postgres)\
+        Streamlit Cloud pour démo publique
+      ]
+    ],
+  )
+]
+
+
+#slide[
+  #set align(horizon)
+
+  #align(center)[
+    #text(size: 22pt, weight: 700)[Dimension éthique]
+  ]
+
+  #v(0.8em)
+
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
+    row-gutter: 0.7em,
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 14pt, weight: 700)[Sur-confiance du modèle]
+      #v(0.3em)
+      #text(size: 12pt, fill: LL_GREY)[
+        Tendance à formuler des observations comme
+        des recommandations.
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 14pt, weight: 700)[Produit non régulé]
+      #v(0.3em)
+      #text(size: 12pt, fill: LL_GREY)[
+        Pas d'obligation MiFID II / FINMA.
+        Disclaimer ne suffit pas.
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 14pt, weight: 700)[Confirmation trop fluide]
+      #v(0.3em)
+      #text(size: 12pt, fill: LL_GREY)[
+        Un clic suffit. Une étape « justifier »
+        forcerait une réflexion.
+      ]
+    ],
+    big-card(w: 100%, fill: LL_BG)[
+      #text(size: 14pt, weight: 700)[Biais des sources]
+      #v(0.3em)
+      #text(size: 12pt, fill: LL_GREY)[
+        News Alpaca essentiellement anglo-saxonnes.
+      ]
+    ],
+  )
+]
+
+
+// ----------------------------------------------------------------------------
+// CONCLUSION
+// ----------------------------------------------------------------------------
+#slide[
+  #set align(horizon)
+
+  #align(center)[
+    #text(size: 26pt, weight: 700)[Ce que démontre Llamafolio]
+  ]
+
+  #v(1em)
+
+  #align(center)[
+    #grid(
+      columns: 1,
+      row-gutter: 0.7em,
+      big-card(w: 80%, fill: LL_BG)[
+        #align(center)[
+          #text(size: 20pt, weight: 700, fill: LL_BLUE)[
+            L'architecture pèse plus lourd que le provider.
+          ]
+        ]
+      ],
+      big-card(w: 80%, fill: LL_BG)[
+        #align(center)[
+          #text(size: 20pt, weight: 700, fill: LL_BLUE)[
+            La sécurité est architecturale, pas un disclaimer.
+          ]
+        ]
+      ],
+      big-card(w: 80%, fill: LL_BG)[
+        #align(center)[
+          #text(size: 20pt, weight: 700, fill: LL_BLUE)[
+            L'eval trouve les bugs que les _prompts_ cachent.
+          ]
+        ]
+      ],
+    )
+  ]
+
+  #v(1em)
+
+  #align(center)[
+    #text(size: 11pt, fill: LL_GREY)[
+      #link("https://github.com/Vicolet/IAG-AI-Trademaxxing")
+    ]
+  ]
+]
+
+
+#slide[
+  #set align(horizon + center)
+
+  #text(size: 84pt, weight: 700)[Merci.]
+
+  #v(1em)
+
+  #text(size: 22pt, fill: LL_GREY)[Questions & réponses]
 ]
