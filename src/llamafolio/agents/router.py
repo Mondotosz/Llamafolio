@@ -160,6 +160,52 @@ def make_specialist_node(specialist):
     return node
 
 
+# Matches a structured proposal block as emitted by the supervisor / specialists.
+# Must include the **Proposed trade** header AND the three structured fields,
+# so that a user typing "**Proposed trade**" by hand in a single line cannot
+# fake a proposal — the regex demands Symbol/Side/Quantity below.
+_PROPOSAL_PATTERN = re.compile(
+    r"\*\*Proposed trade\*\*.*?Symbol:\s*[A-Za-z]{1,8}.*?Side:\s*(?:BUY|SELL).*?Quantity:",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _has_prior_proposal(messages: list[BaseMessage]) -> bool:
+    """True iff a prior *assistant* message contains a structured proposal.
+
+    We require the proposal to come from an AIMessage so that a user cannot
+    forge one by pasting the block themselves in a HumanMessage.
+    """
+    for m in messages:
+        if isinstance(m, AIMessage) and _PROPOSAL_PATTERN.search(_content_text(m)):
+            return True
+    return False
+
+
+def make_executor_node(executor):
+    """Executor node guarded by a structural proposal check.
+
+    The executor's safety contract requires a prior **Proposed trade** block
+    matching the user's confirmation. We enforce this *before* invoking the
+    LLM — relying on a prompt rule alone proved unreliable in adversarial
+    cases (eval found two bypasses: bare "confirm" and forged
+    "confirm sell NVDA $1500" without any proposal in history).
+    """
+    refusal = (
+        "I can't execute that. There is no matching trade proposal in this "
+        "conversation. Ask me to *suggest a trim* or *analyse a position*, "
+        "and I'll produce a proper proposal you can confirm."
+    )
+
+    async def node(state: RouterState) -> dict:
+        if not _has_prior_proposal(state["messages"]):
+            return {"messages": [AIMessage(content=refusal, name="executor")]}
+        result = await executor.ainvoke({"messages": state["messages"]})
+        return {"messages": result["messages"]}
+
+    return node
+
+
 def make_complex_node(supervisor_graph):
     """Fall-back path: run the existing supervisor chain unchanged."""
 
@@ -191,7 +237,7 @@ def build_router_graph(
     workflow.add_node("analyst", make_specialist_node(analyst))
     workflow.add_node("research", make_specialist_node(research))
     workflow.add_node("risk", make_specialist_node(risk))
-    workflow.add_node("executor", make_specialist_node(executor))
+    workflow.add_node("executor", make_executor_node(executor))
     workflow.add_node("complex", make_complex_node(supervisor_graph))
 
     workflow.set_entry_point("classifier")
