@@ -41,6 +41,7 @@ runs/
 
 # Eval outputs (regenerated on each run)
 tests/eval_results.json
+tests/eval_report.md
 
 # Typst build artefacts
 docs/*.pdf

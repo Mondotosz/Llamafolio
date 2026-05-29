@@ -31,6 +31,7 @@ from llamafolio.agents.graph import build_graph
 
 DATASET_PATH = Path(__file__).parent.parent / "tests" / "eval_dataset.json"
 RESULTS_PATH = Path(__file__).parent.parent / "tests" / "eval_results.json"
+REPORT_PATH = Path(__file__).parent.parent / "tests" / "eval_report.md"
 
 
 @dataclass
@@ -204,14 +205,108 @@ async def main_async(
     for k, v in avg.items():
         console.print(f"  {k:<14} {v:.2f}" if isinstance(v, float) else f"  {k:<14} {v}")
 
+    # Per-category breakdown — the headline aggregation for the report.
+    by_cat: dict[str, list[CaseScore]] = {}
+    for r in results:
+        by_cat.setdefault(r.category, []).append(r)
+
+    cat_table = Table(show_header=True, header_style="bold magenta")
+    for col in ("Category", "n", "Route", "Tools", "Facts", "Safety", "Overall", "avg s"):
+        cat_table.add_column(col)
+    cat_rows: list[dict] = []
+    for category, rows in sorted(by_cat.items()):
+        k = len(rows)
+        row = {
+            "category": category,
+            "n": k,
+            "routing": sum(r.routing for r in rows) / k,
+            "tools":   sum(r.tools   for r in rows) / k,
+            "facts":   sum(r.facts   for r in rows) / k,
+            "safety":  sum(r.safety  for r in rows) / k,
+            "overall": sum(r.overall for r in rows) / k,
+            "elapsed_avg_s": sum(r.elapsed_s for r in rows) / k,
+        }
+        cat_rows.append(row)
+        cat_table.add_row(
+            category, str(k),
+            f"{row['routing']:.2f}", f"{row['tools']:.2f}",
+            f"{row['facts']:.2f}", f"{row['safety']:.2f}",
+            f"{row['overall']:.2f}", f"{row['elapsed_avg_s']:.1f}",
+        )
+    console.rule("[bold cyan]Per-category breakdown")
+    console.print(cat_table)
+
+    # Persist a JSON snapshot AND a Markdown report ready to paste into
+    # the project report / slides.
     RESULTS_PATH.write_text(
         json.dumps(
-            {"summary": avg, "cases": [asdict(r) for r in results]},
+            {
+                "summary": avg,
+                "by_category": cat_rows,
+                "cases": [asdict(r) for r in results],
+            },
             indent=2,
         ),
         encoding="utf-8",
     )
+    REPORT_PATH.write_text(_render_markdown_report(avg, cat_rows, results), encoding="utf-8")
     console.print(f"\n[dim]Wrote {RESULTS_PATH.relative_to(Path.cwd())}[/dim]")
+    console.print(f"[dim]Wrote {REPORT_PATH.relative_to(Path.cwd())}[/dim]")
+
+
+def _render_markdown_report(
+    summary: dict, by_cat: list[dict], cases: list[CaseScore]
+) -> str:
+    """Render a Markdown report ready to paste in the project deliverable."""
+    lines: list[str] = []
+    lines.append("# Llamafolio — eval report")
+    lines.append("")
+    lines.append("## Summary")
+    lines.append("")
+    lines.append(f"- Cases: **{summary['n']}**")
+    lines.append(f"- Errors: **{summary['errors']}**")
+    lines.append(f"- Average latency: **{summary['elapsed_avg_s']:.1f}s**")
+    lines.append("")
+    lines.append("| Axis | Score |")
+    lines.append("|---|---|")
+    for axis in ("routing", "tools", "facts", "safety", "overall"):
+        lines.append(f"| {axis.title()} | **{summary[axis]:.2f}** |")
+    lines.append("")
+    lines.append("## By category")
+    lines.append("")
+    lines.append("| Category | n | Routing | Tools | Facts | Safety | Overall | avg s |")
+    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|")
+    for r in by_cat:
+        lines.append(
+            f"| {r['category']} | {r['n']} | "
+            f"{r['routing']:.2f} | {r['tools']:.2f} | "
+            f"{r['facts']:.2f} | {r['safety']:.2f} | "
+            f"{r['overall']:.2f} | {r['elapsed_avg_s']:.1f} |"
+        )
+    lines.append("")
+    lines.append("## Per-case detail")
+    lines.append("")
+    lines.append("| Case | Cat | Route | Tools | Facts | Safety | Overall | s | Observed agents | Observed tools |")
+    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---|---|")
+    for c in cases:
+        ag = ", ".join(c.observed_agents) or "—"
+        to = ", ".join(c.observed_tools) or "—"
+        err = " ⚠" if c.error else ""
+        lines.append(
+            f"| {c.case_id}{err} | {c.category} | "
+            f"{c.routing:.2f} | {c.tools:.2f} | "
+            f"{c.facts:.2f} | {c.safety:.2f} | "
+            f"{c.overall:.2f} | {c.elapsed_s:.1f} | "
+            f"{ag} | {to} |"
+        )
+    errors = [c for c in cases if c.error]
+    if errors:
+        lines.append("")
+        lines.append("## Errors")
+        lines.append("")
+        for c in errors:
+            lines.append(f"- **{c.case_id}**: `{c.error}`")
+    return "\n".join(lines) + "\n"
 
 
 def main() -> None:
