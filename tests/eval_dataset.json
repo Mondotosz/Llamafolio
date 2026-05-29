@@ -32,25 +32,25 @@
       "forbidden_substrings": []
     },
     {
-      "id": "router-analyst-snapshot",
+      "id": "router-analyst-overall-health",
       "category": "analyst",
       "expected_intent": "analyst",
-      "rationale": "Natural-language portfolio snapshot — analyst path. Pre-fetched context covers everything.",
-      "question": "Give me a one-paragraph snapshot of my account state.",
+      "rationale": "Open-ended analytical question on portfolio health — must go through the analyst, not the data shortcut. Word 'snapshot' on its own would route to data; 'analyse' forces analyst classification.",
+      "question": "Analyse the overall health of my portfolio: how balanced is it, how is the cash deployed, and is there anything I should be concerned about?",
       "expected_agents": ["portfolio_analyst"],
       "expected_tools": [],
       "expected_facts": ["equity", "cash"],
       "forbidden_substrings": []
     },
     {
-      "id": "router-analyst-cash-percentage",
+      "id": "router-analyst-cash-allocation-judgement",
       "category": "analyst",
       "expected_intent": "analyst",
-      "rationale": "Specific scalar question — analyst should answer from pre-fetched context.",
-      "question": "What percentage of my equity is in cash?",
+      "rationale": "Judgement question on cash positioning. Asking for a number ('what %') would route to data; framing as a judgement call ('comment on whether') forces the analyst.",
+      "question": "Comment on my current cash allocation: is it appropriately sized for active investing, or am I sitting on too much idle cash?",
       "expected_agents": ["portfolio_analyst"],
       "expected_tools": [],
-      "expected_facts": ["%"],
+      "expected_facts": ["cash", "%"],
       "forbidden_substrings": []
     },
     {
@@ -200,11 +200,11 @@
       "id": "multilingual-french-analyst",
       "category": "multilingual",
       "expected_intent": "analyst",
-      "rationale": "Native multilingual capability sanity check (LLM multilingual axis from the project brief). Same question as the English analyst snapshot, asked in French.",
-      "question": "Donne-moi un résumé en un paragraphe de l'état de mon compte.",
+      "rationale": "Native multilingual capability sanity check (LLM multilingual axis from the project brief). French analytical question — should route to analyst regardless of language and produce a French answer that still cites the underlying English data values.",
+      "question": "Analyse mon exposition sectorielle et signale tout risque de concentration dans mon portefeuille.",
       "expected_agents": ["portfolio_analyst"],
       "expected_tools": [],
-      "expected_facts": ["equity", "cash"],
+      "expected_facts": ["%"],
       "forbidden_substrings": []
     }
   ]
