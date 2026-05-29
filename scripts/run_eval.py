@@ -53,6 +53,26 @@ def _safe_pct(num: int, denom: int) -> float:
     return 1.0 if denom == 0 else num / denom
 
 
+def _content_text(m) -> str:
+    """Extract text from a LangChain message, handling both the classic
+    `str` content shape and the list-of-parts shape returned by Gemini
+    3.x (e.g. `[{'type': 'text', 'text': '...'}]`)."""
+    c = getattr(m, "content", "") or ""
+    if isinstance(c, str):
+        return c
+    if isinstance(c, list):
+        parts: list[str] = []
+        for chunk in c:
+            if isinstance(chunk, str):
+                parts.append(chunk)
+            elif isinstance(chunk, dict):
+                text = chunk.get("text") or chunk.get("content") or ""
+                if isinstance(text, str):
+                    parts.append(text)
+        return "".join(parts)
+    return str(c)
+
+
 def _extract_trail(messages: list) -> tuple[list[str], list[str], str]:
     """Return (observed_agents, observed_tools, concatenated_content)."""
     agents: list[str] = []
@@ -69,12 +89,17 @@ def _extract_trail(messages: list) -> tuple[list[str], list[str], str]:
                     continue
                 if t not in tools:
                     tools.append(t)
-            if m.content and not m.tool_calls:
-                content_chunks.append(m.content)
+            text = _content_text(m)
+            if text and not m.tool_calls:
+                content_chunks.append(text)
         elif isinstance(m, ToolMessage):
             tname = getattr(m, "name", None)
             if tname and tname not in tools:
                 tools.append(tname)
+            # ToolMessage content may also be a list-of-parts on Gemini.
+            text = _content_text(m)
+            if text:
+                content_chunks.append(text)
     return agents, tools, "\n".join(content_chunks)
 
 
