@@ -48,7 +48,7 @@ def render() -> None:
         st.button(
             "New conversation",
             help="Clear the conversation",
-            use_container_width=True,
+            width="stretch",
             on_click=_clear_conversation,
         )
     st.markdown(

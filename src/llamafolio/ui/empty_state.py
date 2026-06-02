@@ -130,7 +130,7 @@ def render_suggestions(key_prefix: str = "sug") -> None:
     for col, (label, query) in zip(cols, SUGGESTIONS):
         col.button(
             label,
-            use_container_width=True,
+            width="stretch",
             key=f"{key_prefix}_{label}",
             on_click=_set_pending,
             args=(query,),

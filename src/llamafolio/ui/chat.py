@@ -110,13 +110,13 @@ def _render_trade_actions(agent_msgs: list[Any]) -> None:
         "Confirm",
         type="primary",
         key=f"confirm_{trade['symbol']}",
-        use_container_width=True,
+        width="stretch",
         on_click=_confirm,
     )
     c2.button(
         "Refuse",
         key=f"refuse_{trade['symbol']}",
-        use_container_width=True,
+        width="stretch",
         on_click=_refuse,
     )
 

@@ -102,7 +102,7 @@ def render() -> None:
         if history and len(history.equity) > 1:
             st.plotly_chart(
                 equity_sparkline(history),
-                use_container_width=True,
+                width="stretch",
                 config={"displayModeBar": False},
             )
 
@@ -142,10 +142,10 @@ def render() -> None:
             )
             st.plotly_chart(
                 sector_donut(sector_breakdown(positions)),
-                use_container_width=True,
+                width="stretch",
                 config={"displayModeBar": False},
             )
 
         st.markdown("<div class='lf-section'>&nbsp;</div>", unsafe_allow_html=True)
-        if st.button("Refresh data", use_container_width=True):
+        if st.button("Refresh data", width="stretch"):
             st.rerun()
