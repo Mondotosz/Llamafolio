@@ -18,9 +18,12 @@ save 4-6 round-trips compared to going through the supervisor every time.
 """
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from typing import Annotated, Any, TypedDict
+
+logger = logging.getLogger(__name__)
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -106,6 +109,7 @@ def make_classifier_node(llm: BaseChatModel):
         if low.startswith(("confirm ", "execute ", "yes, ")) and any(
             k in low for k in ("sell", "buy", "trim")
         ):
+            logger.info("Routing: intent=executor (deterministic shortcut) question=%r", question[:60])
             return {"intent": "executor"}
 
         response = await llm.ainvoke([
@@ -113,12 +117,15 @@ def make_classifier_node(llm: BaseChatModel):
             HumanMessage(content=question),
         ])
         raw = _content_text(response).strip().lower()
+        logger.debug("Classifier raw response: %r", raw)
         # Robust parser: search the full response for any valid intent word,
         # not just the first token. Gemini Flash Lite occasionally wraps the
         # answer in a short sentence rather than emitting one bare word.
         for candidate in VALID_INTENTS:
             if re.search(rf"\b{candidate}\b", raw):
+                logger.info("Routing: intent=%s question=%r", candidate, question[:60])
                 return {"intent": candidate}
+        logger.warning("Classifier returned unknown intent %r — falling back to complex", raw[:40])
         return {"intent": "complex"}
 
     return classifier
@@ -199,6 +206,7 @@ def make_executor_node(executor):
 
     async def node(state: RouterState) -> dict:
         if not _has_prior_proposal(state["messages"]):
+            logger.warning("Executor guard: blocked — no prior structured proposal in conversation history")
             return {"messages": [AIMessage(content=refusal, name="executor")]}
         result = await executor.ainvoke({"messages": state["messages"]})
         return {"messages": result["messages"]}

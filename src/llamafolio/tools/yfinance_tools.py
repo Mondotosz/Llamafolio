@@ -5,10 +5,13 @@ the LLM context window.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import yfinance as yf
 from langchain_core.tools import tool
+
+logger = logging.getLogger(__name__)
 
 
 def _safe(d: dict[str, Any], key: str, default: Any = None) -> Any:
@@ -21,9 +24,13 @@ def _ticker_info(symbol: str) -> dict[str, Any] | str:
     try:
         info = yf.Ticker(symbol).info
     except Exception:  # noqa: BLE001
-        return "Symbol not found — may be a crypto asset or delisted ticker."
+        msg = "Symbol not found — may be a crypto asset or delisted ticker."
+        logger.warning("yfinance lookup failed for %r: %s", symbol, msg)
+        return msg
     if not info.get("regularMarketPrice") and not info.get("marketCap"):
-        return "No equity data — may be a crypto asset or unknown ticker."
+        msg = "No equity data — may be a crypto asset or unknown ticker."
+        logger.warning("yfinance returned no equity data for %r: %s", symbol, msg)
+        return msg
     return info
 
 

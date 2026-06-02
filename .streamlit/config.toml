@@ -12,3 +12,7 @@ headless = true
 
 [browser]
 gatherUsageStats = false
+
+[logger]
+# Suppress Streamlit's own verbose internal INFO logs so app-level INFO stands out.
+level = "warning"

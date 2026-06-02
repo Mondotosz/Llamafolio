@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import streamlit as st
 
+from llamafolio.config import setup_logging
 from llamafolio.ui import chat, header, sidebar, styles
 from llamafolio.ui.assets import FAVICON
 
 
 def main() -> None:
     """Render one full Streamlit script pass."""
+    setup_logging()
     st.set_page_config(
         page_title="Llamafolio",
         page_icon=FAVICON,

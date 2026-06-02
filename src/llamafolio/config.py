@@ -1,8 +1,26 @@
+import logging
 import os
 from dataclasses import dataclass
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+
+def setup_logging() -> None:
+    """Configure root logger for the app.
+
+    Safe to call multiple times — basicConfig is a no-op when handlers are
+    already present, so Streamlit's per-rerun script execution is harmless.
+    Level is controlled by the LOG_LEVEL env var (default INFO).
+    """
+    level = os.getenv("LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level=level,
+    )
 
 
 def _required(name: str) -> str:
@@ -50,7 +68,7 @@ def load_settings() -> Settings:
         else os.getenv("GOOGLE_API_KEY")
     )
 
-    return Settings(
+    settings = Settings(
         alpaca_api_key=_required("ALPACA_API_KEY"),
         alpaca_secret_key=_required("ALPACA_SECRET_KEY"),
         alpaca_base_url=os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets"),
@@ -63,3 +81,6 @@ def load_settings() -> Settings:
         langsmith_api_key=os.getenv("LANGSMITH_API_KEY"),
         langsmith_project=os.getenv("LANGSMITH_PROJECT", "llamafolio"),
     )
+    model = settings.gemini_model if provider == "gemini" else settings.groq_model
+    logger.info("Settings loaded: provider=%s model=%s base_url=%s", provider, model, settings.alpaca_base_url)
+    return settings

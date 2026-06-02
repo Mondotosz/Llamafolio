@@ -21,9 +21,12 @@ Groq and Gemini.
 """
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from langchain_core.language_models import BaseChatModel
+
+logger = logging.getLogger(__name__)
 from langchain_core.tools import BaseTool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
@@ -95,8 +98,11 @@ def build_llm(settings: Settings) -> BaseChatModel:
 async def build_graph(settings: Settings | None = None):
     """Build the multi-agent graph + router. Returns a compiled LangGraph app."""
     settings = settings or load_settings()
+    model = settings.gemini_model if settings.llm_provider == "gemini" else settings.groq_model
+    logger.info("Building graph: provider=%s model=%s", settings.llm_provider, model)
     llm = build_llm(settings)
     alpaca = await get_alpaca_tools(settings)
+    logger.info("Alpaca MCP tools loaded: %d tools available", len(alpaca))
 
     # --- specialists --------------------------------------------------------
     analyst = create_react_agent(
@@ -182,7 +188,7 @@ async def build_graph(settings: Settings | None = None):
     # decline) we bypass the supervisor entirely and route directly to the
     # right node. Only multi-step decisions (trim, rebalance, recommend) fall
     # through to the supervisor chain. See agents/router.py for the path map.
-    return build_router_graph(
+    graph = build_router_graph(
         llm,
         analyst=analyst,
         research=research,
@@ -190,6 +196,8 @@ async def build_graph(settings: Settings | None = None):
         executor=executor,
         supervisor_graph=supervisor_compiled,
     )
+    logger.info("Graph compiled and ready")
+    return graph
 
 
 __all__ = ["build_graph", "build_llm"]

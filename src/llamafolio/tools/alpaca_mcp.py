@@ -13,7 +13,11 @@ Available toolsets (from the alpaca-mcp-server README):
 """
 from __future__ import annotations
 
+import logging
+
 from langchain_core.tools import BaseTool
+
+logger = logging.getLogger(__name__)
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 from llamafolio.config import Settings
@@ -66,6 +70,9 @@ async def get_alpaca_tools(
     toolsets: str = DEFAULT_TOOLSETS,
 ) -> list[BaseTool]:
     """Connect to the Alpaca MCP server and return LangChain tools (filtered)."""
+    logger.info("Loading Alpaca MCP tools: toolsets=%s", toolsets)
     client = build_alpaca_mcp_client(settings, toolsets=toolsets)
     tools = await client.get_tools()
-    return [t for t in tools if t.name not in EXCLUDED_TOOLS]
+    filtered = [t for t in tools if t.name not in EXCLUDED_TOOLS]
+    logger.info("Alpaca MCP tools ready: %d tools loaded (%d excluded)", len(filtered), len(tools) - len(filtered))
+    return filtered

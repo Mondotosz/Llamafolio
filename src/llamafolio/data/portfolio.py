@@ -8,9 +8,12 @@ dataclasses and pure functions.
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
+
+logger = logging.getLogger(__name__)
 
 import yfinance as yf
 from alpaca.trading.client import TradingClient
@@ -93,6 +96,7 @@ def load_positions(settings: Settings) -> list[PositionRow]:
             )
         )
     rows.sort(key=lambda r: r.market_value, reverse=True)
+    logger.info("Portfolio loaded: %d positions, total equity=$%.0f", len(rows), total)
     return rows
 
 
@@ -139,6 +143,7 @@ def load_equity_history(
             GetPortfolioHistoryRequest(period=period, timeframe=timeframe)
         )
     except Exception:  # noqa: BLE001
+        logger.warning("Could not load equity history from Alpaca (period=%s timeframe=%s)", period, timeframe)
         return None
     if not hist.equity or not hist.timestamp:
         return None
