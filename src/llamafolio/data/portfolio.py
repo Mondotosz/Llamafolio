@@ -89,7 +89,7 @@ def load_positions(settings: Settings) -> list[PositionRow]:
                 market_value=mv,
                 weight_pct=(mv / total * 100) if total else 0.0,
                 plpc=float(p.unrealized_plpc) * 100,
-                sector=_sector_of(p.symbol),
+                sector="Crypto" if p.asset_class.value in ("crypto", "crypto_perp") else _sector_of(p.symbol),
             )
         )
     rows.sort(key=lambda r: r.market_value, reverse=True)
