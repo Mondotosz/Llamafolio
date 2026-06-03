@@ -541,7 +541,7 @@
 
   #align(center)[
     #text(size: 11pt, fill: LL_GREY)[
-      #link("https://github.com/Vicolet/IAG-AI-Trademaxxing")
+      #link("https://github.com/Mondotosz/Llamafolio")
     ]
   ]
 ]

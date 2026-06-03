@@ -108,7 +108,7 @@ Requires Python ≥ 3.12 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 # 1. Clone
-git clone <repo-url> && cd IAG-AI-Trademaxxing
+git clone git@github.com:Mondotosz/Llamafolio.git && cd Llamafolio
 
 # 2. Configure secrets
 cp .env.example .env

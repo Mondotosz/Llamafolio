@@ -24,7 +24,7 @@
   #text(size: 10pt)[Victor & Kenan · HEIG-VD · Cours IA générative · #datetime.today().display("[day]/[month]/[year]")]
   #v(-0.3em)
   #text(size: 9pt, fill: rgb("#64748B"))[
-    Dépôt : #link("https://github.com/Vicolet/IAG-AI-Trademaxxing")
+    Dépôt : #link("https://github.com/Mondotosz/Llamafolio")
   ]
 ]
 
@@ -1152,6 +1152,6 @@ naturelles sans refonte de l'architecture actuelle. Le projet est
   #text(size: 9pt, fill: rgb("#64748B"))[
     Rapport généré le #datetime.today().display("[day]/[month]/[year]")
     — Llamafolio #h(0.5em) · #h(0.5em)
-    #link("https://github.com/Vicolet/IAG-AI-Trademaxxing")
+    #link("https://github.com/Mondotosz/Llamafolio")
   ]
 ]
