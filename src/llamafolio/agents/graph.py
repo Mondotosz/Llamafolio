@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 from langchain_core.tools import BaseTool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
+from langchain_ollama import ChatOllama
 from langgraph.prebuilt import create_react_agent
 from langgraph_supervisor import create_supervisor
 
@@ -92,13 +93,25 @@ def build_llm(settings: Settings) -> BaseChatModel:
             max_retries=5,
             thinking_budget=0,
         )
+    if settings.llm_provider == "ollama":
+        return ChatOllama(
+            model=settings.ollama_model,
+            base_url=settings.ollama_base_url,
+            temperature=0.1,
+            reasoning=False,  # disable thinking mode — same incompatibility with langgraph-supervisor as Gemini 2.5
+        )
     raise RuntimeError(f"Unknown LLM provider: {settings.llm_provider!r}")
 
 
 async def build_graph(settings: Settings | None = None):
     """Build the multi-agent graph + router. Returns a compiled LangGraph app."""
     settings = settings or load_settings()
-    model = settings.gemini_model if settings.llm_provider == "gemini" else settings.groq_model
+    if settings.llm_provider == "gemini":
+        model = settings.gemini_model
+    elif settings.llm_provider == "ollama":
+        model = settings.ollama_model
+    else:
+        model = settings.groq_model
     logger.info("Building graph: provider=%s model=%s", settings.llm_provider, model)
     llm = build_llm(settings)
     alpaca = await get_alpaca_tools(settings)

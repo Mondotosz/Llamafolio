@@ -37,13 +37,16 @@ class Settings:
     alpaca_secret_key: str
     alpaca_base_url: str
     # LLM provider selection
-    llm_provider: str  # "groq" or "gemini"
+    llm_provider: str  # "groq" | "gemini" | "ollama"
     # Groq (optional when llm_provider != "groq")
     groq_api_key: str | None
     groq_model: str
     # Gemini (optional when llm_provider != "gemini")
     google_api_key: str | None
     gemini_model: str
+    # Ollama (optional when llm_provider != "ollama")
+    ollama_model: str
+    ollama_base_url: str
     # External tools
     tavily_api_key: str
     # LangSmith
@@ -53,12 +56,12 @@ class Settings:
 
 def load_settings() -> Settings:
     provider = os.getenv("LLM_PROVIDER", "groq").lower()
-    if provider not in {"groq", "gemini"}:
+    if provider not in {"groq", "gemini", "ollama"}:
         raise RuntimeError(
-            f"LLM_PROVIDER must be 'groq' or 'gemini', got {provider!r}"
+            f"LLM_PROVIDER must be 'groq', 'gemini', or 'ollama', got {provider!r}"
         )
 
-    # Only require the credentials for the active provider.
+    # Only require credentials for the active provider.
     groq_key = (
         _required("GROQ_API_KEY") if provider == "groq" else os.getenv("GROQ_API_KEY")
     )
@@ -77,10 +80,17 @@ def load_settings() -> Settings:
         groq_model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
         google_api_key=google_key,
         gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+        ollama_model=os.getenv("OLLAMA_MODEL", "qwen3.5:4b"),
+        ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         tavily_api_key=_required("TAVILY_API_KEY"),
         langsmith_api_key=os.getenv("LANGSMITH_API_KEY"),
         langsmith_project=os.getenv("LANGSMITH_PROJECT", "llamafolio"),
     )
-    model = settings.gemini_model if provider == "gemini" else settings.groq_model
-    logger.info("Settings loaded: provider=%s model=%s base_url=%s", provider, model, settings.alpaca_base_url)
+    if provider == "gemini":
+        model = settings.gemini_model
+    elif provider == "ollama":
+        model = f"{settings.ollama_model} @ {settings.ollama_base_url}"
+    else:
+        model = settings.groq_model
+    logger.info("Settings loaded: provider=%s model=%s", provider, model)
     return settings

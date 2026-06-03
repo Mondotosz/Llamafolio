@@ -46,11 +46,13 @@ Copy `.env.example` to `.env` and populate:
 |---|---|
 | `ALPACA_API_KEY` / `ALPACA_SECRET_KEY` | Must be paper trading keys |
 | `ALPACA_BASE_URL` | Defaults to `https://paper-api.alpaca.markets` |
-| `LLM_PROVIDER` | `gemini` or `groq` |
+| `LLM_PROVIDER` | `gemini`, `groq`, or `ollama` |
 | `GOOGLE_API_KEY` | Required if `LLM_PROVIDER=gemini` |
 | `GROQ_API_KEY` | Required if `LLM_PROVIDER=groq` |
 | `GEMINI_MODEL` | Defaults to `gemini-3.1-flash-lite` |
 | `GROQ_MODEL` | Defaults to `openai/gpt-oss-120b` |
+| `OLLAMA_MODEL` | Defaults to `qwen3.5:4b` (6.2 GB VRAM, safe for 8 GB GPU); use `qwen3.5:9b` (8.9 GB VRAM) on 16 GB GPU |
+| `OLLAMA_BASE_URL` | Defaults to `http://localhost:11434`; set for remote Ollama |
 | `TAVILY_API_KEY` | Web search |
 | `LANGSMITH_API_KEY` | Optional tracing |
 
