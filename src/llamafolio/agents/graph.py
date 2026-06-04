@@ -181,6 +181,14 @@ async def build_graph(settings: Settings | None = None):
     )
 
     # --- supervisor (fallback for complex multi-step requests) -------------
+    # The executor is intentionally NOT in the supervisor's agent list. The
+    # supervisor's job is to PROPOSE a trade (structured **Proposed trade**
+    # block); execution only happens after explicit user confirmation, which
+    # the router catches and routes to the guarded executor node. Without
+    # this exclusion, the supervisor could chain analyst -> research -> risk
+    # -> executor autonomously, bypassing the structural proposal guard.
+    # Discovered by the adversarial-prompt-injection-via-news-question case.
+    #
     # output_mode="full_history" bubbles every sub-agent message (tool calls,
     # tool results, reasoning) up to the parent state. We rely on this in two
     # places:
@@ -190,7 +198,7 @@ async def build_graph(settings: Settings | None = None):
     #   - the Streamlit timeline shows the real chain of tool calls per
     #     specialist instead of just the handoff transitions.
     supervisor_compiled = create_supervisor(
-        agents=[analyst, research, risk, executor],
+        agents=[analyst, research, risk],
         model=llm,
         prompt=_prompt("supervisor"),
         output_mode="full_history",
