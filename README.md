@@ -80,7 +80,9 @@ Final mini-project for the **Generative AI** course at HEIG-VD (2026).
 | `decline` | *What's the weather today?* | 1 | ~1 s |
 
 See [docs/architecture.md](docs/architecture.md) for the full breakdown,
-and [docs/rapport.pdf](docs/rapport.pdf) for the complete written report.
+and [docs/rapport.pdf](docs/rapport.pdf) for the 2-page consigne-aligned
+report. An extended 18-page version (ML/MLOps/Security triptych +
+development journal) lives at [docs/rapport_extended.pdf](docs/rapport_extended.pdf).
 
 ---
 
@@ -156,7 +158,8 @@ Switch LLM provider with `LLM_PROVIDER=gemini` (default) or
 ├── assets/                           # Brand kit (logos, avatars, favicons)
 ├── docs/
 │   ├── architecture.md               # Technical overview
-│   ├── rapport.typ / rapport.pdf     # Full written report (FR, Typst)
+│   ├── rapport.typ / rapport.pdf     # Official 2-page report (FR, Typst)
+│   ├── rapport_extended.typ / .pdf   # Extended 18-page report (FR, Typst)
 │   └── slides.typ  / slides.pdf      # Presentation deck (FR, Touying)
 ├── scripts/                          # CLI utilities
 │   ├── check_alpaca.py               #   verify Alpaca connection
@@ -271,7 +274,7 @@ The programmatic guard was added after the eval harness discovered that
 the executor's system prompt alone was insufficient: the model was
 hallucinating implicit proposals from confirmation text like
 `"confirm sell NVDA $1500"`. Full incident write-up in
-[docs/rapport.pdf § 6.6](docs/rapport.pdf).
+[docs/rapport_extended.pdf § 6.6](docs/rapport_extended.pdf).
 
 ---
 
@@ -297,7 +300,8 @@ authored in [Typst](https://typst.app/). Install the CLI once
 Linux, or your distro's package), then from the repository root:
 
 ```bash
-typst compile --root . docs/rapport.typ docs/rapport.pdf
+typst compile --root . docs/rapport.typ          docs/rapport.pdf
+typst compile --root . docs/rapport_extended.typ docs/rapport_extended.pdf
 typst compile --root . docs/slides.typ  docs/slides.pdf
 ```
 
