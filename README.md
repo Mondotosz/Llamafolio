@@ -70,15 +70,15 @@ Final mini-project for the **Generative AI** course at HEIG-VD (2026).
      without a matching **Proposed trade** block in the AI history.
 ```
 
-| Intent path | Typical question | LLM calls | Latency |
-| --- | --- | ---:| ---:|
-| `data` | *What's in my portfolio?* | 1 (router) | ~1 s |
-| `analyst` | *Analyse my sector exposure.* | 2 | ~5 s |
-| `research` | *News on NVDA today?* | 2 | ~6 s |
-| `risk` | *What if I sold 50 % of NVDA?* | 2 | ~5 s |
-| `complex` | *Suggest one trim with research and risk check.* | 6–12 | ~30 s |
-| `executor` | *confirm sell NVDA $1800* | 0–2 | ~1–4 s |
-| `decline` | *What's the weather today?* | 1 | ~1 s |
+| Intent path | Typical question                                 |  LLM calls | Latency |
+| ----------- | ------------------------------------------------ | ---------: | ------: |
+| `data`      | _What's in my portfolio?_                        | 1 (router) |    ~1 s |
+| `analyst`   | _Analyse my sector exposure._                    |          2 |    ~5 s |
+| `research`  | _News on NVDA today?_                            |          2 |    ~6 s |
+| `risk`      | _What if I sold 50 % of NVDA?_                   |          2 |    ~5 s |
+| `complex`   | _Suggest one trim with research and risk check._ |       6–12 |   ~30 s |
+| `executor`  | _confirm sell NVDA $1800_                        |        0–2 |  ~1–4 s |
+| `decline`   | _What's the weather today?_                      |          1 |    ~1 s |
 
 See [docs/architecture.md](docs/architecture.md) for the full breakdown,
 and [docs/rapport.pdf](docs/rapport.pdf) for the 2-page consigne-aligned
@@ -89,19 +89,19 @@ development journal) lives at [docs/rapport_extended.pdf](docs/rapport_extended.
 
 ## Stack
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| LLM (default) | **Gemini 3.1 Flash Lite** | 250 k TPM, 15 RPM free, native parallel tool calling, multilingual |
-| LLM (failover) | Groq **gpt-oss-120b** | ~500 t/s, quality on par, switchable via `.env` |
-| Orchestration | LangGraph + `langgraph-supervisor` | Streaming, explicit state, supervisor pattern |
-| Trading | Alpaca paper trading | Realistic execution semantics, free, no KYC |
-| MCP tools | `alpaca-mcp-server` (FastMCP) | Official, 60+ tools via Model Context Protocol |
-| Web search | Tavily | LLM-friendly search API, free tier |
-| Fundamentals | yfinance | No key required, complements Alpaca |
-| UI | Streamlit + Plotly | Streaming-native, demo-friendly |
-| Tracing | LangSmith (EU endpoint) | Multi-agent traces, prompt versioning, GDPR |
-| Packaging | `uv` | Deterministic lockfile, 10× faster than pip |
-| Reporting | Typst + Touying | PDF report and slides versioned in-repo |
+| Layer          | Choice                             | Why                                                                |
+| -------------- | ---------------------------------- | ------------------------------------------------------------------ |
+| LLM (default)  | **Gemini 3.1 Flash Lite**          | 250 k TPM, 15 RPM free, native parallel tool calling, multilingual |
+| LLM (failover) | Groq **gpt-oss-120b**              | ~500 t/s, quality on par, switchable via `.env`                    |
+| Orchestration  | LangGraph + `langgraph-supervisor` | Streaming, explicit state, supervisor pattern                      |
+| Trading        | Alpaca paper trading               | Realistic execution semantics, free, no KYC                        |
+| MCP tools      | `alpaca-mcp-server` (FastMCP)      | Official, 60+ tools via Model Context Protocol                     |
+| Web search     | Tavily                             | LLM-friendly search API, free tier                                 |
+| Fundamentals   | yfinance                           | No key required, complements Alpaca                                |
+| UI             | Streamlit + Plotly                 | Streaming-native, demo-friendly                                    |
+| Tracing        | LangSmith (EU endpoint)            | Multi-agent traces, prompt versioning, GDPR                        |
+| Packaging      | `uv`                               | Deterministic lockfile, 10× faster than pip                        |
+| Reporting      | Typst + Touying                    | PDF report and slides versioned in-repo                            |
 
 ---
 
@@ -135,13 +135,13 @@ The app is served at <http://localhost:8501>.
 
 ### Required API keys (all free tiers)
 
-| Service | Used for | Sign up |
-| --- | --- | --- |
-| [Alpaca](https://alpaca.markets/) | Paper trading, market data, news | Free |
+| Service                                                | Used for                            | Sign up                |
+| ------------------------------------------------------ | ----------------------------------- | ---------------------- |
+| [Alpaca](https://alpaca.markets/)                      | Paper trading, market data, news    | Free                   |
 | [Google AI Studio](https://aistudio.google.com/apikey) | Gemini 3.1 Flash Lite (default LLM) | Free, 15 RPM / 500 RPD |
-| [Groq](https://console.groq.com/) | gpt-oss-120b (alternate LLM) | Free |
-| [Tavily](https://tavily.com/) | Web search | Free, 1000 req/mo |
-| [LangSmith](https://smith.langchain.com/) | Tracing (optional) | Free, 5000 traces/mo |
+| [Groq](https://console.groq.com/)                      | gpt-oss-120b (alternate LLM)        | Free                   |
+| [Tavily](https://tavily.com/)                          | Web search                          | Free, 1000 req/mo      |
+| [LangSmith](https://smith.langchain.com/)              | Tracing (optional)                  | Free, 5000 traces/mo   |
 
 Switch LLM provider with `LLM_PROVIDER=gemini` (default) or
 `LLM_PROVIDER=groq` in `.env`. No code change needed.
@@ -214,12 +214,12 @@ top-level config. `app.py` is a 9-line shim; the real work lives in
 The eval harness drives the full graph through `tests/eval_dataset.json`
 (18 cases across 7 router paths) and scores each case on four axes:
 
-| Axis | Measure |
-| --- | --- |
-| **Routing** | Share of expected agents observed in the trace |
-| **Tools** | Share of expected tools observed (only fresh fetches; pre-fetched context covers positions/sectors) |
-| **Facts** | Substring presence of expected facts in the assistant content |
-| **Safety** | Absence of forbidden substrings (e.g. `place_stock_order` after an ambiguous "confirm") |
+| Axis        | Measure                                                                                             |
+| ----------- | --------------------------------------------------------------------------------------------------- |
+| **Routing** | Share of expected agents observed in the trace                                                      |
+| **Tools**   | Share of expected tools observed (only fresh fetches; pre-fetched context covers positions/sectors) |
+| **Facts**   | Substring presence of expected facts in the assistant content                                       |
+| **Safety**  | Absence of forbidden substrings (e.g. `place_stock_order` after an ambiguous "confirm")             |
 
 Run the full eval:
 
@@ -239,14 +239,14 @@ results per category and per case, with observed agents and tools.
 
 ### Latest results (Gemini 3.1 Flash Lite, post-patch)
 
-| Category | n | Routing | Tools | Facts | Safety | avg s |
-| --- | ---:| ---:| ---:| ---:| ---:| ---:|
-| data | 1 | 1.00 | 1.00 | 1.00 | 1.00 | 6.1 |
-| analyst | 3 | 1.00 | 1.00 | 1.00 | 1.00 | 5.3 |
-| research | 5 | 1.00 | 1.00 | 1.00 | 1.00 | 5.7 |
-| complex | 2 | 1.00 | 1.00 | 1.00 | 1.00 | 40.3 |
-| safety | 5 | 1.00 | 1.00 | 1.00 | 1.00 | 7.8 |
-| multilingual | 1 | 1.00 | 1.00 | 1.00 | 1.00 | 21.9 |
+| Category     |   n | Routing | Tools | Facts | Safety | avg s |
+| ------------ | --: | ------: | ----: | ----: | -----: | ----: |
+| data         |   1 |    1.00 |  1.00 |  1.00 |   1.00 |   6.1 |
+| analyst      |   3 |    1.00 |  1.00 |  1.00 |   1.00 |   5.3 |
+| research     |   5 |    1.00 |  1.00 |  1.00 |   1.00 |   5.7 |
+| complex      |   2 |    1.00 |  1.00 |  1.00 |   1.00 |  40.3 |
+| safety       |   5 |    1.00 |  1.00 |  1.00 |   1.00 |   7.8 |
+| multilingual |   1 |    1.00 |  1.00 |  1.00 |   1.00 |  21.9 |
 
 **1.00 on all four axes across 16/18 cases.** The remaining 2 cases were
 rate-limited mid-run by Gemini's free tier; the paths they test are
@@ -281,15 +281,15 @@ hallucinating implicit proposals from confirmation text like
 
 ## Scripts
 
-| Script | Purpose |
-| --- | --- |
-| `scripts/check_alpaca.py` | Verify Alpaca connection — print account + positions |
-| `scripts/check_mcp.py` | Verify the Alpaca MCP server — list exposed tools |
-| `scripts/check_tools.py` | Verify yfinance + Tavily tools |
-| `scripts/seed_portfolio.py` | Seed a tech-heavy demo portfolio |
-| `scripts/run_single_agent.py` | Run the single-agent baseline (CLI, no UI) |
-| `scripts/run_multi_agent.py` | Run the multi-agent supervisor graph (CLI, no UI) |
-| `scripts/run_eval.py` | Score the graph against `tests/eval_dataset.json` |
+| Script                        | Purpose                                              |
+| ----------------------------- | ---------------------------------------------------- |
+| `scripts/check_alpaca.py`     | Verify Alpaca connection — print account + positions |
+| `scripts/check_mcp.py`        | Verify the Alpaca MCP server — list exposed tools    |
+| `scripts/check_tools.py`      | Verify yfinance + Tavily tools                       |
+| `scripts/seed_portfolio.py`   | Seed a tech-heavy demo portfolio                     |
+| `scripts/run_single_agent.py` | Run the single-agent baseline (CLI, no UI)           |
+| `scripts/run_multi_agent.py`  | Run the multi-agent supervisor graph (CLI, no UI)    |
+| `scripts/run_eval.py`         | Score the graph against `tests/eval_dataset.json`    |
 
 ---
 
