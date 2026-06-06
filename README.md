@@ -49,23 +49,24 @@ Final mini-project for the **Generative AI** course at HEIG-VD (2026).
 ## Architecture
 
 ```
-   ┌──────────────────────────────────────────────────────────────────┐
-   │                  Streamlit UI (host)                              │
-   │  ┌────────────────────┐  pre-fetch Alpaca  ┌─────────────────┐    │
-   │  │ user question      │ ─────────────────► │ <portfolio_ctx> │    │
-   │  └─────────┬──────────┘                    └────────┬────────┘    │
-   └────────────┼──────────────────────────────────────────┼───────────┘
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │                         Streamlit UI (host)                          │
+   │  ┌────────────────────┐  pre-fetch Alpaca  ┌─────────────────────┐   │
+   │  │  user question     │ ─────────────────► │  <portfolio_ctx>    │   │
+   │  └─────────┬──────────┘                    └──────────┬──────────┘   │
+   └────────────┼─────────────────────────────────────────┼───────────────┘
                 ▼                                          ▼
-            ┌──────────────────────────────────────────────┐
-            │            intent router (1 LLM call)         │
-            └──┬────────────┬────────────┬────────────┬─────┘
-               │            │            │            │
-        ┌──────┴──┐  ┌──────┴──┐  ┌──────┴──┐  ┌──────┴──────┐
-        ▼         ▼  ▼         ▼  ▼         ▼  ▼             ▼
-       data   analyst  research  risk  executor*  complex (supervisor chain)
-       0 LLM    2 LLM   2 LLM    2 LLM   2 LLM      6–12 LLM round-trips
+            ┌───────────────────────────────────────────────┐
+            │          intent router (1 LLM call)           │
+            └──────────────────────┬────────────────────────┘
+                                   │
+      ┌───────┬─────────┬──────────┼──────────┬──────────┬──────────┐
+      │       │         │          │          │          │          │
+      ▼       ▼         ▼          ▼          ▼          ▼          ▼
+    data   analyst   research     risk     executor   complex    decline
+    1 LLM  2 LLM     2 LLM        2 LLM    0–2 LLM†   6–12 LLM   1 LLM
 
-   * executor guarded by `_has_prior_proposal` — refuses deterministically
+   † executor guarded by `_has_prior_proposal` — refuses deterministically
      without a matching **Proposed trade** block in the AI history.
 ```
 
