@@ -107,7 +107,8 @@
 
   #align(center)[
     #text(size: 22pt, weight: 500)[
-      #text(weight: 700, fill: LL_BLUE)[Llamafolio] combine en *une seule conversation* :
+      #text(weight: 700, fill: LL_BLUE)[Llamafolio] combine en *une seule
+      conversation* :
     ]
   ]
 
@@ -125,6 +126,7 @@
       #text(size: 18pt, weight: 700)[Recherche]\
       #text(size: 13pt, fill: LL_GREY)[news, fondamentaux, web]
     ],
+
     big-card(w: 100%, fill: LL_BG)[
       #text(size: 18pt, weight: 700)[Risque]\
       #text(size: 13pt, fill: LL_GREY)[volatilité, bêta, taille de position]
@@ -139,7 +141,8 @@
 
   #align(center)[
     #text(size: 14pt, fill: LL_GREY)[
-      Cible : investisseur curieux ou étudiant en finance — pas un professionnel.
+      Cible : investisseur curieux ou étudiant en finance — pas un
+      professionnel.
     ]
   ]
 ]
@@ -162,32 +165,9 @@
 
   #v(0.6em)
 
-  #align(center)[
-    #block(
-      stroke: 1pt + LL_BLUE,
-      radius: 6pt,
-      inset: 14pt,
-      width: 96%,
-    )[
-      #set text(font: "DejaVu Sans Mono", size: 10pt)
-      #align(left)[
-```
-                       ┌──────────────────┐
-   user ──────────────►│  intent router   │   1 LLM call
-                       └─┬────────────────┘
-                         │
-     ┌──────────┬────────┼────────┬────────────┬──────────┐
-     ▼          ▼        ▼        ▼            ▼          ▼
-    data    analyst  research   risk      executor*   complex
-   0 LLM    2 LLM    2 LLM    2 LLM       2 LLM     6–12 LLM
-                                                       ▼
-                                                 supervisor chain
-
-   * garde structurel programmatique
-```
-      ]
-    ]
-  ]
+  #figure(
+    image("../assets/architecture-horizon.png", height: 47%),
+  )
 
   #v(0.8em)
 
@@ -195,7 +175,7 @@
     #big-card(w: 80%, fill: LL_BG)[
       #align(center)[
         #text(size: 28pt, weight: 700, fill: LL_BLUE)[
-          9 round-trips  →  2.3
+          9 round-trips → 2.3
         ]
         #v(0.2em)
         #text(size: 16pt, fill: LL_GREY)[
@@ -247,7 +227,8 @@
     #big-card(w: 92%, fill: LL_AMBER)[
       #align(center)[
         #text(size: 15pt)[
-          *Au-delà du cours :* Model Context Protocol · intent router · pré-fetch du contexte
+          *Au-delà du cours :* Model Context Protocol · intent router ·
+          pré-fetch du contexte
         ]
       ]
     ]
@@ -318,32 +299,31 @@
       #text(size: 15pt, weight: 700)[Gemini _thinking_ × supervisor]
       #v(0.3em)
       #text(size: 12pt, fill: LL_GREY)[
-        Incompatible : `thought_signature` manquante.
-        Fix : `thinking_budget=0`.
+        Incompatible : `thought_signature` manquante. Fix : `thinking_budget=0`.
       ]
     ],
     big-card(w: 100%, fill: LL_BG)[
       #text(size: 15pt, weight: 700)[Rate limits gratuits]
       #v(0.3em)
       #text(size: 12pt, fill: LL_GREY)[
-        Gemini 15 RPM / 500 RPD.
-        Notre archi (~2 round-trips) reste viable.
+        Gemini 15 RPM / 500 RPD. Notre archi (~2 round-trips) reste viable.
       ]
     ],
+
     big-card(w: 100%, fill: LL_BG)[
       #text(size: 15pt, weight: 700)[Substring matching]
       #v(0.3em)
       #text(size: 12pt, fill: LL_GREY)[
-        Détecte les régressions structurelles.
-        LLM-as-judge compléterait sur la qualité.
+        Détecte les régressions structurelles. LLM-as-judge compléterait sur la
+        qualité.
       ]
     ],
     big-card(w: 100%, fill: LL_BG)[
       #text(size: 15pt, weight: 700)[Couverture eval minimale]
       #v(0.3em)
       #text(size: 12pt, fill: LL_GREY)[
-        18 cas — suffisants pour trouver la faille
-        executor. Insuffisants en production.
+        18 cas — suffisants pour trouver la faille executor. Insuffisants en
+        production.
       ]
     ],
   )
@@ -429,6 +409,7 @@
         Sanitization des news (anti _prompt injection_)
       ]
     ],
+
     big-card(w: 100%, fill: LL_BG)[
       #text(size: 14pt, weight: 700, fill: LL_BLUE)[MLOps]
       #v(0.2em)
@@ -466,24 +447,22 @@
       #text(size: 14pt, weight: 700)[Sur-confiance du modèle]
       #v(0.3em)
       #text(size: 12pt, fill: LL_GREY)[
-        Tendance à formuler des observations comme
-        des recommandations.
+        Tendance à formuler des observations comme des recommandations.
       ]
     ],
     big-card(w: 100%, fill: LL_BG)[
       #text(size: 14pt, weight: 700)[Produit non régulé]
       #v(0.3em)
       #text(size: 12pt, fill: LL_GREY)[
-        Pas d'obligation MiFID II / FINMA.
-        Disclaimer ne suffit pas.
+        Pas d'obligation MiFID II / FINMA. Disclaimer ne suffit pas.
       ]
     ],
+
     big-card(w: 100%, fill: LL_BG)[
       #text(size: 14pt, weight: 700)[Confirmation trop fluide]
       #v(0.3em)
       #text(size: 12pt, fill: LL_GREY)[
-        Un clic suffit. Une étape « justifier »
-        forcerait une réflexion.
+        Un clic suffit. Une étape « justifier » forcerait une réflexion.
       ]
     ],
     big-card(w: 100%, fill: LL_BG)[
