@@ -54,32 +54,10 @@ Deux couches : un _intent router_ classifie chaque tour en l'une de 7
 intentions et route vers le _path_ minimal ; une chaîne _supervisor_
 LangGraph gère uniquement les requêtes complexes multi-étapes.
 
-#align(center)[
-  #block(
-    stroke: 0.4pt + rgb("#D1D5DB"),
-    radius: 3pt,
-    inset: 6pt,
-    width: 99%,
-  )[
-    #set text(font: "DejaVu Sans Mono", size: 6.8pt)
-    #align(left)[
-```
-                       ┌──────────────────┐
-   user ──────────────►│  intent router   │   1 LLM call
-                       └─┬────────────────┘
-                         │
-     ┌──────────┬────────┼────────┬────────────┬──────────┐
-     ▼          ▼        ▼        ▼            ▼          ▼
-    data    analyst  research   risk      executor*   complex (supervisor)
-   0 LLM    2 LLM    2 LLM    2 LLM       2 LLM        6–12 LLM
-                                            ▲           (analyst → research
-                                            │            → risk)
-                                  garde structurel programmatique :
-                              refuse sans **Proposed trade** AIMessage
-```
-    ]
-  ]
-]
+#figure(
+  image("../assets/architecture-horizon.png", height: 4.2cm),
+  caption: [_Intent router_ en amont, sept _paths_ dont l'exécuteur protégé par un garde programmatique. Seul `complex` déploie la chaîne _supervisor_.],
+)
 
 == 2.1 Stack et justifications
 

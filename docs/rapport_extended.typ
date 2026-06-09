@@ -97,41 +97,10 @@ Llamafolio s'organise en *deux couches d'agents* superposées par un
 _intent router_, plus une UI Streamlit qui pré-fetch le contexte avant
 chaque tour.
 
-#align(center)[
-  #block(
-    stroke: 0.5pt + rgb("#D1D5DB"),
-    radius: 4pt,
-    inset: 8pt,
-    width: 96%,
-  )[
-    #set text(font: "DejaVu Sans Mono", size: 7.5pt)
-    #align(left)[
-```
-   ┌──────────────────────────────────────────────────────────────────┐
-   │                  Streamlit UI (host)                              │
-   │  ┌────────────────────┐  pré-fetch Alpaca  ┌─────────────────┐    │
-   │  │ user question      │ ─────────────────► │ <portfolio_ctx> │    │
-   │  └─────────┬──────────┘                    └────────┬────────┘    │
-   └────────────┼──────────────────────────────────────────┼───────────┘
-                ▼                                          ▼
-            ┌──────────────────────────────────────────────┐
-            │            intent router (1 LLM)              │
-            └──┬────────────┬────────────┬────────────┬─────┘
-               │            │            │            │
-        ┌──────┴──┐  ┌──────┴──┐  ┌──────┴──┐  ┌──────┴──────┐
-        ▼         ▼  ▼         ▼  ▼         ▼  ▼             ▼
-       data   analyst  research  risk  executor*  complex (supervisor chain)
-       (0 LLM)  (2 LLM) (2 LLM)  (2 LLM)  (2 LLM)  ┌──────────┴──────────┐
-                                                   ▼   ▼   ▼   ▼   ▼      ▼
-                                              supervisor  ↔  analyst,
-                                                            research, risk,
-                                                            executor*
-
-   * executor protégé par un garde structurel (cf. § 6.4)
-```
-    ]
-  ]
-]
+#figure(
+  image("../assets/architecture-horizon.png", width: 100%),
+  caption: [Architecture à deux couches : _intent router_ en amont du _supervisor_ LangGraph, avec pré-fetch du contexte portefeuille côté _host_ Streamlit. L'exécuteur est isolé du _supervisor_ et protégé par un garde structurel programmatique (cf. § 6.4 et § 6.7).],
+)
 
 L'utilisateur voit la _timeline_ d'agents en direct (_streaming_
 `graph.astream`), une bannière _Confirm / Refuse_ quand un trade est
