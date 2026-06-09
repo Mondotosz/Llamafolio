@@ -57,32 +57,21 @@ Final mini-project for the **Generative AI** course at HEIG-VD (2026).
 
 ## Architecture
 
-The full diagram lives in [`assets/architecture-horizon.png`](assets/architecture-horizon.png)
-(Excalidraw source: [`assets/architecture-horizon.excalidraw`](assets/architecture-horizon.excalidraw)).
+<p align="center">
+  <img src="assets/architecture-horizon.png" alt="Llamafolio architecture: intent router + 7 paths + supervisor chain on complex" width="92%">
+</p>
 
-```
-   ┌──────────────────────────────────────────────────────────────────────┐
-   │                         Streamlit UI (host)                          │
-   │  ┌────────────────────┐  pre-fetch Alpaca  ┌─────────────────────┐   │
-   │  │  user question     │ ─────────────────► │  <portfolio_ctx>    │   │
-   │  └─────────┬──────────┘                    └──────────┬──────────┘   │
-   └────────────┼─────────────────────────────────────────┼───────────────┘
-                ▼                                          ▼
-            ┌───────────────────────────────────────────────┐
-            │          intent router (1 LLM call)           │
-            └──────────────────────┬────────────────────────┘
-                                   │
-      ┌───────┬─────────┬──────────┼──────────┬──────────┬──────────┐
-      │       │         │          │          │          │          │
-      ▼       ▼         ▼          ▼          ▼          ▼          ▼
-    data   analyst   research     risk     executor   complex    decline
-    1 LLM  2 LLM     2 LLM        2 LLM    0–2 LLM†   6–12 LLM   1 LLM
+The intent router (1 LLM call) classifies each turn into one of seven
+paths. Simple paths invoke a single specialist or no LLM at all; only
+`complex` triggers the supervisor chain (analyst → research → risk).
+The `executor` path is gated by a programmatic guard
+(`_has_prior_proposal`) that refuses deterministically without a
+matching `**Proposed trade**` block in the assistant history, and the
+executor was removed from the supervisor's agent list so `complex` can
+never autonomously route there (see [Safety](#safety) below).
 
-   † executor guarded by `_has_prior_proposal` — refuses deterministically
-     without a matching **Proposed trade** block in the AI history.
-     The executor was also removed from the supervisor's agent list so
-     `complex` never autonomously routes there (see Safety section).
-```
+Source: [`assets/architecture-horizon.excalidraw`](assets/architecture-horizon.excalidraw)
+(editable in [Excalidraw](https://excalidraw.com/)).
 
 | Intent path | Typical question                                 |  LLM calls | Latency |
 | ----------- | ------------------------------------------------ | ---------: | ------: |
