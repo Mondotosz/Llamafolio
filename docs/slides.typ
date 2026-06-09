@@ -40,22 +40,38 @@
   body
 }
 
-#let slide-title(title) = block(below: 0.6em)[
+#let slide-title(title) = block(below: 0.4em)[
   #text(size: 22pt, weight: 700, fill: LL_INK)[#title]
   #v(-0.4em)
   #line(length: 100%, stroke: 0.6pt + LL_BORDER)
 ]
 
-#let section-slide(num, title, time) = slide[
+// Content slide: title fixed at top, body vertically centered in the
+// remaining vertical space below the title.
+#let content-slide(title, body) = slide[
+  #slide-title(title)
+  #v(1fr)
+  #body
+  #v(1fr)
+]
+
+// Centered slide: no title bar, content centered both axes.
+#let center-slide(body) = slide[
+  #v(1fr)
+  #align(center)[#body]
+  #v(1fr)
+]
+
+#let section-slide(num, title) = slide[
   #v(1fr)
   #align(center)[
     #text(size: 13pt, fill: LL_GREY, tracking: 3pt)[
-      PARTIE #num \/ 4 #h(0.5em) · #h(0.5em) #time
+      PARTIE #num \/ 4
     ]
     #v(0.5em)
-    #text(size: 54pt, weight: 700, fill: LL_INK)[#title]
+    #text(size: 60pt, weight: 700, fill: LL_INK)[#title]
   ]
-  #v(1.2fr)
+  #v(1fr)
 ]
 
 #let card(body, w: 100%, fill: LL_LIGHT, stroke: 0.5pt + LL_BORDER) = block(
@@ -100,13 +116,10 @@
 // ============================================================================
 // PART 1 — CAS D'USAGE (2 min)
 // ============================================================================
-#section-slide("1", [Cas d'usage], [2 minutes])
+#section-slide("1", [Cas d'usage])
 
 
-#slide[
-  #slide-title[Le problème]
-
-  #v(1em)
+#content-slide([Le problème])[
 
   #grid(
     columns: (1fr, 1fr, 1fr),
@@ -147,10 +160,7 @@
 ]
 
 
-#slide[
-  #slide-title[Une seule conversation]
-
-  #v(0.8em)
+#content-slide([Une seule conversation])[
 
   #align(center)[
     #text(size: 14pt, fill: LL_GREY, style: "italic")[
@@ -211,13 +221,10 @@
 // ============================================================================
 // PART 2 — ARCHITECTURE TECHNIQUE (2 min)
 // ============================================================================
-#section-slide("2", [Architecture technique], [2 minutes])
+#section-slide("2", [Architecture technique])
 
 
-#slide[
-  #slide-title[Schéma général]
-
-  #v(0.3em)
+#content-slide([Schéma général])[
 
   #align(center)[
     #image("../assets/architecture-horizon.png", height: 72%)
@@ -233,10 +240,7 @@
 ]
 
 
-#slide[
-  #slide-title[L'architecture comme levier de coût]
-
-  #v(0.6em)
+#content-slide([L'architecture comme levier de coût])[
 
   #grid(
     columns: (1.5fr, 1fr),
@@ -276,10 +280,7 @@
 ]
 
 
-#slide[
-  #slide-title[Stack et données]
-
-  #v(0.4em)
+#content-slide([Stack et données])[
 
   #grid(
     columns: (1fr, 1fr),
@@ -337,11 +338,11 @@
 // ============================================================================
 // PART 3 — DÉMO (3 min)
 // ============================================================================
-#section-slide("3", [Démonstration], [3 minutes])
+#section-slide("3", [Démonstration])
 
 
 #slide[
-  #v(0.5em)
+  #v(1fr)
 
   #align(center)[
     #text(size: 13pt, fill: LL_GREY, tracking: 3pt)[
@@ -391,19 +392,18 @@
       ]
     ]
   ]
+
+  #v(1fr)
 ]
 
 
 // ============================================================================
 // PART 4 — ANALYSE CRITIQUE (3 min)
 // ============================================================================
-#section-slide("4", [Analyse critique], [3 minutes])
+#section-slide("4", [Analyse critique])
 
 
-#slide[
-  #slide-title[Résultats de l'évaluation comportementale]
-
-  #v(0.4em)
+#content-slide([Résultats de l'évaluation comportementale])[
 
   #grid(
     columns: (1.3fr, 1fr),
@@ -451,10 +451,7 @@
 ]
 
 
-#slide[
-  #slide-title[Trois bugs trouvés par l'eval]
-
-  #v(0.6em)
+#content-slide([Trois bugs trouvés par l'eval])[
 
   #table(
     columns: (auto, 1.5fr, 1.5fr, auto),
@@ -494,10 +491,7 @@
 ]
 
 
-#slide[
-  #slide-title[Limites, améliorations, éthique]
-
-  #v(0.6em)
+#content-slide([Limites, améliorations, éthique])[
 
   #grid(
     columns: (1fr, 1fr, 1fr),
@@ -539,7 +533,7 @@
 // CONCLUSION
 // ============================================================================
 #slide[
-  #v(0.5em)
+  #v(1fr)
 
   #align(center)[
     #text(size: 13pt, fill: LL_GREY, tracking: 3pt)[
@@ -592,6 +586,8 @@
       #link("https://github.com/Mondotosz/Llamafolio")
     ]
   ]
+
+  #v(1fr)
 ]
 
 
