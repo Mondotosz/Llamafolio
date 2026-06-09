@@ -29,14 +29,14 @@
 
   #grid(
     columns: (auto, auto),
-    align: (center),
+    align: (center + horizon),
     column-gutter: 1em,
     inset: 1em,
     cetz.canvas({
       import cetz.draw: *
       cetz-plot.chart.barchart(
         mode: "basic",
-        size: (12, 7.2),
+        size: (9, 6.5),
         label-key: 0,
         value-key: 1,
         x-label: "LLM round-trips par tour (moyenne pondérée)",
@@ -53,26 +53,27 @@
     [
       #stat([×4], [d'économie sur le coût], color: LL_GREEN)
       #stat([×6], [d'économie sur la latence], color: LL_GREEN)
-      #align(center)[
-        #text(size: 14pt, fill: LL_GREY)[
-          L'optimisation est #text(weight: 700, fill: LL_INK)[architecturale],\
-          pas un changement de modèle.
-        ]
-      ]
     ],
   )
+  #align(center)[
+    #card(w: 90%)[
+      #text(size: 20pt)[
+        L'optimisation est *architecturale*, pas un changement de modèle.
+      ]
+    ]
+  ]
 ]
+
 
 
 #content-slide([Stack et données])[
 
   #grid(
     columns: (1fr, 1fr),
-    column-gutter: 1.2em,
+    column-gutter: 1em,
     [
       #text(size: 15pt, weight: 700, fill: LL_BLUE, tracking: 1pt)[STACK]
-      #v(0.4em)
-      #set text(size: 14pt)
+      #set text(size: 16pt)
       #table(
         columns: (auto, 1fr),
         inset: 5pt,
@@ -89,8 +90,7 @@
     ],
     [
       #text(size: 15pt, weight: 700, fill: LL_BLUE, tracking: 1pt)[DONNÉES (live)]
-      #v(0.4em)
-      #set text(size: 14pt)
+      #set text(size: 17pt)
       #table(
         columns: (auto, 1fr),
         inset: 5pt,
@@ -105,12 +105,10 @@
     ],
   )
 
-  #v(0.8em)
-
   #align(center)[
-    #card(fill: LL_AMBER, w: 96%, stroke: 0.4pt + rgb("#F59E0B"))[
+    #card(fill: LL_AMBER, w: 90%, stroke: 0.4pt + rgb("#F59E0B"))[
       #align(center)[
-        #text(size: 16pt)[
+        #text(size: 17.7pt)[
           #text(weight: 700)[Au-delà du cours :] Model Context Protocol · intent router · pré-fetch du contexte · dual provider Gemini / Groq / Ollama
         ]
       ]

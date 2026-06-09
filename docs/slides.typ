@@ -26,19 +26,22 @@
 #set page(
   paper: "presentation-16-9",
   margin: (top: 1.3cm, bottom: 1.4cm, x: 1.6cm),
-  footer-descent: 0.1cm,
+  footer-descent: 0cm,
   fill: white,
   footer: context {
     let n = here().page()
     if n > 1 {
+      v(0.6em)
       let total = counter(page).final().first()
       let frac = n / total
       block(width: 100%)[
+        
         #box(width: 100%, height: 2pt, fill: LL_BORDER)
         #place(top + left, box(width: frac * 100%, height: 2pt, fill: LL_BLUE))
-        #v(3pt)
+        #v(-0.6em)
         #grid(
           columns: (1fr, auto),
+          
           text(size: 10pt, fill: LL_GREY)[Llamafolio · Conseiller de portefeuille multi-agents],
           text(size: 10pt, fill: LL_GREY)[#n \/ #total],
         )

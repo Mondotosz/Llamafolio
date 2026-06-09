@@ -8,9 +8,9 @@
 
 
 #content-slide([Résultats de l'évaluation comportementale])[
-
+  #v(3em)
   #grid(
-    columns: (1.3fr, 1fr),
+    columns: (auto, auto),
     column-gutter: 1.5em,
     [
       #text(size: 15pt, fill: LL_GREY)[
@@ -19,7 +19,7 @@
       #v(0.4em)
       #set text(size: 14pt)
       #table(
-        columns: (1fr, 1fr, 0.5fr),
+        columns: (1fr, 1fr, 0.2fr),
         inset: 4pt,
         stroke: 0.4pt + LL_BORDER,
         align: (left, left, center),
@@ -48,7 +48,7 @@
 
       #v(0.5em)
 
-      #text(size: 12pt, fill: LL_GREY)[
+      #text(size: 16pt, fill: LL_GREY)[
         #super[\*] deux faux positifs du substring matching : la réponse de refus mentionne « successfully » ou « BTC/USD ». `observed_tools` confirme : zéro `place_stock_order`.
       ]
     ],
@@ -57,7 +57,7 @@
 
 
 #content-slide([Trois bugs trouvés par l'eval])[
-
+  #v(1em)
   #table(
     columns: (auto, 1.5fr, 1.5fr, auto),
     inset: 7pt,
@@ -98,9 +98,11 @@
 
 #content-slide([Limites, améliorations, éthique])[
 
+  #v(3em)
   #grid(
     columns: (1fr, 1fr, 1fr),
     column-gutter: 1em,
+    
     [
       #text(size: 16pt, weight: 700, fill: LL_BLUE, tracking: 1pt)[LIMITES]
       #v(0.4em)

@@ -28,8 +28,8 @@
 }
 
 #let slide-title(title) = block(below: 0.4em)[
-  #text(size: 26pt, weight: 700, fill: LL_INK)[#title]
-  #v(-0.4em)
+  #text(size: 30pt, weight: 700, fill: LL_INK)[#title]
+  #v(-1.5em)
   #line(length: 100%, stroke: 0.6pt + LL_BORDER)
 ]
 
@@ -52,18 +52,18 @@
 #let section-slide(num, title) = slide[
   #v(1fr)
   #align(center)[
+    #text(size: 64pt, weight: 700, fill: LL_INK)[#title]
+    #v(-2em)
     #text(size: 16pt, fill: LL_GREY, tracking: 3pt)[
       PARTIE #num \/ 4
     ]
-    #v(0.5em)
-    #text(size: 64pt, weight: 700, fill: LL_INK)[#title]
   ]
   #v(1fr)
 ]
 
 #let card(body, w: 100%, fill: LL_LIGHT, stroke: 0.5pt + LL_BORDER) = block(
   fill: fill,
-  inset: 1em,
+  inset: 1.5em,
   radius: 6pt,
   stroke: stroke,
   width: w,
@@ -72,7 +72,7 @@
 
 #let stat(value, label, color: LL_BLUE) = align(center)[
   #text(size: 46pt, weight: 700, fill: color)[#value]
-
+  #v(-2.5em)
   #text(size: 14pt, fill: LL_GREY)[#label]
 ]
 

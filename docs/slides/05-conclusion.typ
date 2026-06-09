@@ -27,21 +27,22 @@
   #grid(
     columns: 1,
     row-gutter: 0.45em,
-    card(w: 88%)[
+    align: center,
+    card(w: 95%)[
       #align(center)[
         #text(size: 18pt)[
           L'#text(weight: 700, fill: LL_BLUE)[architecture] pèse plus lourd que le provider dans l'optimisation des coûts.
         ]
       ]
     ],
-    card(w: 88%)[
+    card(w: 95%)[
       #align(center)[
         #text(size: 18pt)[
           La #text(weight: 700, fill: LL_BLUE)[sécurité] est architecturale, pas un disclaimer.
         ]
       ]
     ],
-    card(w: 88%)[
+    card(w: 95%)[
       #align(center)[
         #text(size: 18pt)[
           L'#text(weight: 700, fill: LL_BLUE)[eval] trouve les bugs que les system prompts cachent.
@@ -65,8 +66,8 @@
 #slide[
   #v(1fr)
   #align(center)[
-    #text(size: 96pt, weight: 700, fill: LL_INK)[Merci.]
-    #v(0.8em)
+    #text(size: 96pt, weight: 700, fill: LL_INK)[Merci]
+    #v(-5em)
     #text(size: 20pt, fill: LL_GREY)[Questions & réponses]
   ]
   #v(1fr)

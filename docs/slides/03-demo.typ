@@ -8,7 +8,6 @@
 
 
 #slide[
-  #v(1fr)
 
   #align(center)[
     #text(size: 16pt, fill: LL_GREY, tracking: 3pt)[
@@ -16,42 +15,40 @@
     ]
   ]
 
-  #v(0.8em)
-
   #grid(
-    columns: (1fr, 1fr),
+    columns: (auto, auto),
+    rows: (auto, auto),
+    align: (horizon),
     column-gutter: 1em,
-    row-gutter: 0.8em,
+    row-gutter: 1em,
     card[
-      #text(size: 16pt, weight: 700, fill: LL_BLUE)[1 · Path data]
-      #v(0.3em)
-      #text(size: 15pt)[« What's in my portfolio? » → 1 s, 0 agent invoqué]
+      #text(size: 21pt, weight: 700, fill: LL_BLUE)[1 · Path data]
+      #v(-0.7em)
+      #text(size: 15pt)[« What's in my portfolio? » → 1 s, 0 agent inv§oqué]
     ],
     card[
-      #text(size: 16pt, weight: 700, fill: LL_BLUE)[2 · Path complex]
-      #v(0.3em)
-      #text(size: 15pt)[« Suggest one trim with research and risk » → chaîne complète]
+      #text(size: 21pt, weight: 700, fill: LL_BLUE)[2 · Path complex]
+      #v(-0.7em)
+      #text(size: 16pt)[« Suggest one trim with research and risk » → chaîne complète]
     ],
     card[
-      #text(size: 16pt, weight: 700, fill: LL_BLUE)[3 · Confirmation guardée]
-      #v(0.3em)
-      #text(size: 15pt)[Clic Confirm → garde valide → ordre placé]
+      #text(size: 21pt, weight: 700, fill: LL_BLUE)[3 · Confirmation guardée]
+      #v(-0.7em)
+      #text(size: 16pt)[Clic Confirm → garde valide → ordre placé]
     ],
     card[
-      #text(size: 16pt, weight: 700, fill: LL_BLUE)[4 · Attaque bloquée]
-      #v(0.3em)
-      #text(size: 15pt)[« confirm sell NVDA \$1500 » sans proposition → refus 1.4 s]
+      #text(size: 21pt, weight: 700, fill: LL_BLUE)[4 · Attaque bloquée]
+      #v(-0.7em)
+      #text(size: 16pt)[« confirm sell NVDA \$1500 » sans proposition → refus 1.4 s]
     ],
   )
-
-  #v(0.6em)
 
   #align(center)[
     #card(w: 96%)[
       #align(center)[
-        #text(size: 16pt, weight: 700, fill: LL_BLUE)[5 · Multilingue natif]
-        #v(0.2em)
-        #text(size: 15pt)[
+        #text(size: 21pt, weight: 700, fill: LL_BLUE)[5 · Multilingue natif]
+        #v(-1em)
+        #text(size: 16pt)[
           Question en français → routage analyste → réponse en français
           qui cite les pourcentages anglais sous-jacents.
         ]
