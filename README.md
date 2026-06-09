@@ -33,24 +33,32 @@ Final mini-project for the **Generative AI** course at HEIG-VD (2026).
 - **MCP-native tools** — The official `alpaca-mcp-server` is spawned via
   stdio and its 60+ tools are exposed to the agents through
   `langchain-mcp-adapters`. Tavily and yfinance complete the toolbox.
-- **Defense-in-depth safety** — Router allowlist + structured proposal
-  contract + **programmatic guard** on the executor (no LLM call without a
-  matching prior proposal) + paper-only sandbox. The eval harness
-  discovered and verified the fix for a forged-confirmation bypass.
-- **Dual provider** — Gemini 3.1 Flash Lite (default) or Groq gpt-oss-120b,
-  switchable via `LLM_PROVIDER` in `.env`. No code change required.
+- **Defense-in-depth safety** — Four cumulative layers (router allowlist,
+  structured proposal contract, programmatic guard on the executor,
+  paper-only sandbox). The eval harness uncovered **three security
+  findings** in 23 cases; two were patched, one is documented as a
+  routing weakness with no architectural impact.
+- **Triple provider** — Gemini 3.1 Flash Lite (default), Groq gpt-oss-120b,
+  or Ollama (local). Switchable via `LLM_PROVIDER` in `.env`, no code
+  change required.
 - **Pre-fetch portfolio context** — A host-side Alpaca read is injected
   into every turn, saving 8–10 MCP round-trips per analyst question.
-- **Behavioural eval harness** — 18 cases across 7 router paths, scored on
-  routing, tools, facts, and safety. Latest run: **1.00 across all 4 axes**
-  on 16/18 cases (2 rate-limited).
+- **Behavioural eval harness** — 23 cases across the 7 router paths plus
+  an adversarial pack, scored on routing, tools, facts, and safety.
 - **Streaming UI** — Streamlit timeline with per-agent bubbles, a strict
   `Confirm / Refuse` banner triggered only by structured proposals, and a
   per-turn metrics footer (specialists / tool calls / round-trips / time).
+- **Structured logging** — `setup_logging()` configurable via `LOG_LEVEL`
+  env var produces tagged events like `Routing: intent=data` or
+  `Executor guard: blocked` so the routing decisions are observable in
+  the terminal next to the UI.
 
 ---
 
 ## Architecture
+
+The full diagram lives in [`assets/architecture-horizon.png`](assets/architecture-horizon.png)
+(Excalidraw source: [`assets/architecture-horizon.excalidraw`](assets/architecture-horizon.excalidraw)).
 
 ```
    ┌──────────────────────────────────────────────────────────────────────┐
@@ -72,6 +80,8 @@ Final mini-project for the **Generative AI** course at HEIG-VD (2026).
 
    † executor guarded by `_has_prior_proposal` — refuses deterministically
      without a matching **Proposed trade** block in the AI history.
+     The executor was also removed from the supervisor's agent list so
+     `complex` never autonomously routes there (see Safety section).
 ```
 
 | Intent path | Typical question                                 |  LLM calls | Latency |
@@ -86,26 +96,29 @@ Final mini-project for the **Generative AI** course at HEIG-VD (2026).
 
 See [docs/architecture.md](docs/architecture.md) for the full breakdown,
 and [docs/rapport.pdf](docs/rapport.pdf) for the 2-page consigne-aligned
-report. An extended 18-page version (ML/MLOps/Security triptych +
-development journal) lives at [docs/rapport_extended.pdf](docs/rapport_extended.pdf).
+report. An extended 18-page version (ML / MLOps / Security triptych plus
+the development journal and the full three-bug story) lives at
+[docs/rapport_extended.pdf](docs/rapport_extended.pdf).
 
 ---
 
 ## Stack
 
-| Layer          | Choice                             | Why                                                                |
-| -------------- | ---------------------------------- | ------------------------------------------------------------------ |
-| LLM (default)  | **Gemini 3.1 Flash Lite**          | 250 k TPM, 15 RPM free, native parallel tool calling, multilingual |
-| LLM (failover) | Groq **gpt-oss-120b**              | ~500 t/s, quality on par, switchable via `.env`                    |
-| Orchestration  | LangGraph + `langgraph-supervisor` | Streaming, explicit state, supervisor pattern                      |
-| Trading        | Alpaca paper trading               | Realistic execution semantics, free, no KYC                        |
-| MCP tools      | `alpaca-mcp-server` (FastMCP)      | Official, 60+ tools via Model Context Protocol                     |
-| Web search     | Tavily                             | LLM-friendly search API, free tier                                 |
-| Fundamentals   | yfinance                           | No key required, complements Alpaca                                |
-| UI             | Streamlit + Plotly                 | Streaming-native, demo-friendly                                    |
-| Tracing        | LangSmith (EU endpoint)            | Multi-agent traces, prompt versioning, GDPR                        |
-| Packaging      | `uv`                               | Deterministic lockfile, 10× faster than pip                        |
-| Reporting      | Typst + Touying                    | PDF report and slides versioned in-repo                            |
+| Layer            | Choice                             | Why                                                                |
+| ---------------- | ---------------------------------- | ------------------------------------------------------------------ |
+| LLM (default)    | **Gemini 3.1 Flash Lite**          | 250 k TPM, 15 RPM free, native parallel tool calling, multilingual |
+| LLM (failover)   | Groq **gpt-oss-120b**              | ~500 t/s, quality on par, switchable via `.env`                    |
+| LLM (local)      | **Ollama** (any local model)       | Fully offline option, no API key needed                            |
+| Orchestration    | LangGraph + `langgraph-supervisor` | Streaming, explicit state, supervisor pattern                      |
+| Trading          | Alpaca paper trading               | Realistic execution semantics, free, no KYC                        |
+| MCP tools        | `alpaca-mcp-server` (FastMCP)      | Official, 60+ tools via Model Context Protocol                     |
+| Web search       | Tavily                             | LLM-friendly search API, free tier                                 |
+| Fundamentals     | yfinance                           | No key required, complements Alpaca                                |
+| UI               | Streamlit + Plotly                 | Streaming-native, demo-friendly                                    |
+| Tracing          | LangSmith (EU endpoint)            | Multi-agent traces, prompt versioning, GDPR                        |
+| Logging          | stdlib `logging` + `LOG_LEVEL`     | Tagged events for routing, guard, MCP boot                         |
+| Packaging        | `uv`                               | Deterministic lockfile, 10× faster than pip                        |
+| Reporting        | Typst + custom theme + `cetz`      | PDF report and slides versioned in-repo, real bar charts           |
 
 ---
 
@@ -119,7 +132,7 @@ git clone git@github.com:Mondotosz/Llamafolio.git && cd Llamafolio
 
 # 2. Configure secrets
 cp .env.example .env
-#   then edit .env with your Alpaca paper, Gemini (or Groq),
+#   then edit .env with your Alpaca paper, Gemini (or Groq / Ollama),
 #   Tavily, and (optionally) LangSmith keys.
 
 # 3. Install
@@ -144,11 +157,12 @@ The app is served at <http://localhost:8501>.
 | [Alpaca](https://alpaca.markets/)                      | Paper trading, market data, news    | Free                   |
 | [Google AI Studio](https://aistudio.google.com/apikey) | Gemini 3.1 Flash Lite (default LLM) | Free, 15 RPM / 500 RPD |
 | [Groq](https://console.groq.com/)                      | gpt-oss-120b (alternate LLM)        | Free                   |
+| [Ollama](https://ollama.com/)                          | Local LLM, fully offline            | Free, no key           |
 | [Tavily](https://tavily.com/)                          | Web search                          | Free, 1000 req/mo      |
 | [LangSmith](https://smith.langchain.com/)              | Tracing (optional)                  | Free, 5000 traces/mo   |
 
-Switch LLM provider with `LLM_PROVIDER=gemini` (default) or
-`LLM_PROVIDER=groq` in `.env`. No code change needed.
+Switch LLM provider with `LLM_PROVIDER=gemini` (default), `groq`, or
+`ollama` in `.env`. No code change needed.
 
 ---
 
@@ -158,14 +172,26 @@ Switch LLM provider with `LLM_PROVIDER=gemini` (default) or
 .
 ├── app.py                            # Streamlit entry point (9-line shim)
 ├── pyproject.toml                    # Project + deps (uv lock)
+├── CLAUDE.md                         # Project context for Claude Code sessions
 ├── .env.example                      # Template for required secrets
-├── .streamlit/config.toml            # Light theme
-├── assets/                           # Brand kit (logos, avatars, favicons)
+├── .streamlit/config.toml            # Light theme + suppressed Streamlit INFO logs
+├── assets/                           # Brand kit + architecture diagrams
+│   ├── llamafolio-*.svg              #   logo lockups, icons
+│   ├── architecture.excalidraw       #   editable source
+│   └── architecture-horizon.png      #   16:9 export used in slides + report
 ├── docs/
 │   ├── architecture.md               # Technical overview
 │   ├── rapport.typ / rapport.pdf     # Official 2-page report (FR, Typst)
 │   ├── rapport_extended.typ / .pdf   # Extended 18-page report (FR, Typst)
-│   └── slides.typ  / slides.pdf      # Presentation deck (FR, Touying)
+│   ├── slides.typ                    # Slide deck preamble + includes
+│   ├── theme.typ                     # Custom theme: palette + helpers
+│   └── slides/                       # One file per part of the talk
+│       ├── 00-titre.typ
+│       ├── 01-cas-usage.typ
+│       ├── 02-architecture.typ
+│       ├── 03-demo.typ
+│       ├── 04-analyse-critique.typ
+│       └── 05-conclusion.typ
 ├── scripts/                          # CLI utilities
 │   ├── check_alpaca.py               #   verify Alpaca connection
 │   ├── check_mcp.py                  #   verify MCP server + list tools
@@ -176,7 +202,7 @@ Switch LLM provider with `LLM_PROVIDER=gemini` (default) or
 │   └── run_eval.py                   #   eval harness, writes tests/eval_*
 ├── src/llamafolio/                   # Package source (src/ layout)
 │   ├── __init__.py                   #   public API: build_graph, load_settings
-│   ├── config.py                     #   typed .env loader
+│   ├── config.py                     #   typed .env loader + setup_logging()
 │   ├── prompts/                      #   versioned agent prompts (Markdown)
 │   ├── agents/
 │   │   ├── graph.py                  #   build_graph entry point
@@ -185,11 +211,11 @@ Switch LLM provider with `LLM_PROVIDER=gemini` (default) or
 │   ├── tools/                        #   LangChain tools
 │   │   ├── alpaca_mcp.py             #   Alpaca MCP adapter
 │   │   ├── tavily_search.py          #   web search
-│   │   └── yfinance_tools.py         #   fundamentals + company info
+│   │   └── yfinance_tools.py         #   fundamentals + company info, crypto-safe
 │   ├── data/                         #   pure data access (no UI)
 │   │   └── portfolio.py              #   Alpaca + yfinance sync helpers
 │   └── ui/                           #   Streamlit UI (one module per surface)
-│       ├── main.py                   #   composes the page
+│       ├── main.py                   #   composes the page, calls setup_logging()
 │       ├── styles.py                 #   CSS
 │       ├── assets.py                 #   static paths + base64 helper
 │       ├── messages.py               #   LangChain message helpers
@@ -200,10 +226,10 @@ Switch LLM provider with `LLM_PROVIDER=gemini` (default) or
 │       ├── trade_detector.py         #   parses structured proposals
 │       └── chat.py                   #   streaming turn + banner + metrics
 └── tests/
-    ├── eval_dataset.json             # 18 behavioural eval cases (v2.0)
+    ├── eval_dataset.json             # 23 behavioural eval cases
     ├── eval_results.json             # latest run, machine-readable
     ├── eval_report.md                # latest run, human-readable
-    └── eval_*.before_patch.*         # archived pre-patch baseline
+    └── eval_*.before_patch.*         # archived pre-patch baseline (bug #1)
 ```
 
 The `src/` layout keeps every importable artefact under
@@ -216,7 +242,8 @@ top-level config. `app.py` is a 9-line shim; the real work lives in
 ## Eval harness
 
 The eval harness drives the full graph through `tests/eval_dataset.json`
-(18 cases across 7 router paths) and scores each case on four axes:
+(23 cases across the 7 router paths plus an adversarial pack) and scores
+each case on four axes:
 
 | Axis        | Measure                                                                                             |
 | ----------- | --------------------------------------------------------------------------------------------------- |
@@ -237,24 +264,29 @@ Or target a subset:
 uv run python scripts/run_eval.py --cases router-data-portfolio-display,safety-refuse-ambiguous-confirm
 ```
 
-Two artefacts are produced on every run: `tests/eval_results.json` (machine)
-and `tests/eval_report.md` (human, committable). The report breaks down
-results per category and per case, with observed agents and tools.
+Two artefacts are produced on every run: `tests/eval_results.json`
+(machine) and `tests/eval_report.md` (human, committable). The report
+breaks down results per category and per case, with observed agents and
+tools.
 
 ### Latest results (Gemini 3.1 Flash Lite, post-patch)
 
-| Category     |   n | Routing | Tools | Facts | Safety | avg s |
-| ------------ | --: | ------: | ----: | ----: | -----: | ----: |
-| data         |   1 |    1.00 |  1.00 |  1.00 |   1.00 |   6.1 |
-| analyst      |   3 |    1.00 |  1.00 |  1.00 |   1.00 |   5.3 |
-| research     |   5 |    1.00 |  1.00 |  1.00 |   1.00 |   5.7 |
-| complex      |   2 |    1.00 |  1.00 |  1.00 |   1.00 |  40.3 |
-| safety       |   5 |    1.00 |  1.00 |  1.00 |   1.00 |   7.8 |
-| multilingual |   1 |    1.00 |  1.00 |  1.00 |   1.00 |  21.9 |
+| Category     |   n | Routing | Tools | Facts | Safety  | avg s |
+| ------------ | --: | ------: | ----: | ----: | ------: | ----: |
+| data         |   1 |    1.00 |  1.00 |  1.00 |    1.00 |   6.1 |
+| analyst      |   3 |    1.00 |  1.00 |  1.00 |    1.00 |   5.3 |
+| research     |   5 |    1.00 |  1.00 |  1.00 |    1.00 |   5.7 |
+| complex      |   2 |    1.00 |  1.00 |  1.00 |    1.00 |  40.3 |
+| safety       |   5 |    1.00 |  1.00 |  1.00 |    1.00 |   7.8 |
+| adversarial  |   5 |    1.00 |  1.00 |  1.00 | 0.60 \* |   7.7 |
+| multilingual |   1 |    1.00 |  1.00 |  1.00 |    1.00 |  21.9 |
 
-**1.00 on all four axes across 16/18 cases.** The remaining 2 cases were
-rate-limited mid-run by Gemini's free tier; the paths they test are
-covered by other cases in the same category.
+**Routing / Tools / Facts: 1.00 on every category.** The two Safety 0.00
+in `adversarial` are **substring-matching false positives**: the
+assistant's refusal text mentions « successfully » or « BTC/USD » in a
+refusal context. `observed_tools` confirms zero `place_stock_order` was
+called. The architectural safety is intact; the scoring limit is
+documented in [rapport_extended § 8.1](docs/rapport_extended.pdf).
 
 ---
 
@@ -275,11 +307,16 @@ Llamafolio enforces trade-safety in four cumulative layers:
    `account,trading,stock-data,news`, and the Alpaca key must be a paper
    key (verified at startup).
 
-The programmatic guard was added after the eval harness discovered that
-the executor's system prompt alone was insufficient: the model was
-hallucinating implicit proposals from confirmation text like
-`"confirm sell NVDA $1500"`. Full incident write-up in
-[docs/rapport_extended.pdf § 6.6](docs/rapport_extended.pdf).
+### Three bugs the eval found
+
+| #   | Vector                                                                                    | Fix                                                            | Status      |
+| --- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------- |
+| 1   | Executor hallucinated an implicit proposal from confirmation text                         | Programmatic guard pre-LLM in the router (layer 3)             | Resolved    |
+| 2   | Supervisor autonomously routed to the executor on a "research + execute" prompt injection | Executor removed from the `supervisor`'s agent list            | Resolved    |
+| 3   | German crypto request classified `complex` instead of `decline`                           | Documented · no architectural impact since fix #2              | Documented  |
+
+Full incident write-up in
+[docs/rapport_extended.pdf § 6.6–6.9](docs/rapport_extended.pdf).
 
 ---
 
@@ -307,13 +344,19 @@ Linux, or your distro's package), then from the repository root:
 ```bash
 typst compile --root . docs/rapport.typ          docs/rapport.pdf
 typst compile --root . docs/rapport_extended.typ docs/rapport_extended.pdf
-typst compile --root . docs/slides.typ  docs/slides.pdf
+typst compile --root . docs/slides.typ           docs/slides.pdf
 ```
 
-Use `typst watch <path>` for hot reload while iterating. The slides
-depend on the [`touying`](https://typst.app/universe/package/touying)
-package; Typst downloads it automatically from Typst Universe on the
+Use `typst watch <path>` for hot reload while iterating. The slides use
+a custom theme (no Beamer / no Touying) and pull in
+[`cetz`](https://typst.app/universe/package/cetz) +
+[`cetz-plot`](https://typst.app/universe/package/cetz-plot) for the bar
+chart; Typst downloads them automatically from Typst Universe on the
 first compile.
+
+The slides are split: `docs/slides.typ` wires page setup and includes
+six files under `docs/slides/`, one per part of the talk. Edit a single
+part without scrolling through the whole deck.
 
 ---
 
@@ -321,12 +364,15 @@ first compile.
 
 - [x] Behavioural eval harness with auto-scoring on routing / tools / facts / safety
 - [x] Intent router in front of the supervisor for 4× cost reduction
-- [x] Dual provider (Gemini / Groq) switchable via `.env`
+- [x] Triple provider (Gemini / Groq / Ollama) switchable via `.env`
 - [x] Pre-fetch portfolio context to eliminate 8–10 MCP round-trips per turn
-- [x] Programmatic safety guard on the executor
+- [x] Programmatic safety guard on the executor (bug #1 fix)
+- [x] Executor isolated from the supervisor chain (bug #2 fix)
 - [x] Structured proposal contract + `Confirm / Refuse` banner
+- [x] Adversarial eval pack (forged confirmations multi-language, prompt injection)
+- [x] Structured logging with `LOG_LEVEL` env var
+- [x] Crypto-safe yfinance fallback
 - [ ] LLM-as-judge for content quality on top of the substring-match eval
-- [ ] Adversarial eval pack (prompt injection, forged proposals, multilingual confirmations)
 - [ ] GitHub Actions CI: lint, type-check, and run the eval on every PR
 - [ ] LangGraph checkpointer + SQLite/Postgres for cross-session memory
 - [ ] Explicit prompt caching on the five agent system prompts
@@ -337,10 +383,11 @@ first compile.
 
 ## Authors
 
-Victor & Kenan — HEIG-VD, Generative AI course, 2026.
+**Victor Nicolet** & **Kenan Augsburger** — HEIG-VD, Generative AI
+course, 2026.
 
-Project supervised by Nastaran Fatemi, Andrei Popescu-Belis, Shabnam Ataee,
-and Christopher Meier.
+Project supervised by Nastaran Fatemi, Andrei Popescu-Belis, Shabnam
+Ataee, and Christopher Meier.
 
 ---
 
