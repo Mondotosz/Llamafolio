@@ -1,0 +1,228 @@
+= Projet - POC IA générative
+Nastaran FATEMI <nastaran.fatemi@heig-vd.ch>; Andrei POPESCU-BELIS <andrei.popescu-belis@heig-vd.ch>; Shabnam ATAEE <shabnam.ataee@heig-vd.ch>; Christopher MEIER <christopher.meier@heig-vd.ch>
+:revdate: 5 mai 2026
+:lang: fr
+:toc: auto
+:toc-title: Table des matières
+:warning-caption: Attention
+:course: Ingénierie de l'intelligence artificielle générative (IAG)
+:xrefstyle: short
+
+
+== Présentation générale
+
+Ce mini-projet constitue l'évaluation finale du cours d'IA générative. En binôme, vous devez concevoir et présenter un *prototype fonctionnel (POC)* d'une application basée sur l'IA générative, en mobilisant les concepts vus en cours et en explorant de nouvelles dimensions par vous-mêmes.
+
+[cols="1,2", frame=all, grid=all]
+|===
+| Groupes | 2 personnes
+| Charge de travail | 8 périodes encadrées
+| Séances de présentation | 09.06 et 11.06
+| Durée de présentation | 12 minutes
+
+|===
+
+[NOTE]
+====
+*Option :* Il est possible de reprendre le cadre du labo 3 (RAG) avec un autre dataset et d'approfondir une dimension spécifique — multimodal, agentic, reranking, structured output, etc. Cette option est recommandée pour les groupes qui souhaitent consolider leurs acquis plutôt que repartir de zéro.
+====
+
+---
+
+== Objectifs 
+
+Le projet vise à vous faire :
+
+* Mettre en place un POC de produit concret basé sur l'IA générative
+* Combiner plusieurs briques technologiques (LLM, retrieval, outils, modalités)
+* Expérimenter au moins une technique *non couverte en cours*
+* Développer un regard critique sur les choix techniques
+* Communiquer clairement une architecture et ses justifications
+
+---
+
+== Axes technologiques
+
+Voici à titre d'exemples quelques axes technologiques possibles à utiliser :
+
+[cols="1,3,2", options="header", frame=all, grid=all]
+|===
+| Axe | Description | Exemples de techniques
+
+| *LLM multimodal*
+| Traitement de données non textuelles en entrée ou sortie
+| Vision (images, schémas), audio (Whisper), vidéo, structured output JSON
+
+| *IA agentic*
+| Système autonome avec planification et exécution de sous-tâches
+| Tool use / function calling, LangGraph, ReAct, multi-agent
+
+| *RAG / Retrieval*
+| Récupération d'information dans un corpus pour augmenter le LLM
+| RAG classique, reranking, RAG for code, hybrid search, HyDE
+
+| *LLM multilingue*
+| Traitement et génération dans plusieurs langues
+| Détection automatique, traduction, cross-lingual retrieval
+|===
+
+=== Données d'entrée acceptées
+
+Les projets peuvent exploiter tout type de données non structurées ou structurées :
+
+* Tables SQL ou bases de données relationnelles
+* Textes semi-structurés (JSON, Markdown, HTML, logs)
+* Images, schémas techniques, captures d'écran
+* Audio et vidéo (via transcription ou analyse multimodale)
+* Code source (pour RAG for code)
+
+---
+
+== Exemples de sujets
+
+Les sujets suivants sont *indicatifs*. Vous pouvez en proposer un autre. Tous les sujets sont sous réserve de validation par les enseignants.
+
+---
+
+=== Projet A — Assistant documentaire sur données mixtes
+*Axes :* RAG avancé · LLM multilingue
+
+Système de Q&A sur un corpus combinant tables SQL, textes semi-structurés et PDFs. Le système répond en plusieurs langues, cite ses sources et gère les conflits d'information entre documents.
+
+[cols="1,2", frame=sides, grid=none]
+|===
+| *Données d'entrée* | Tables SQL, texte semi-structuré, PDF
+| *Élément nouveau* | Reranking, cross-lingual retrieval
+|===
+
+---
+
+=== Projet B — Analyste de schémas techniques et documents visuels
+*Axes :* LLM multimodal · IA agentic
+
+Agent qui ingère des images et schémas techniques, extrait de l'information structurée (JSON), répond à des questions sur le contenu visuel et génère un rapport avec recommandations.
+
+[cols="1,2", frame=sides, grid=none]
+|===
+| *Données d'entrée* | Images, schémas techniques
+| *Élément nouveau* | Structured output, vision pipeline, agentic loop
+|===
+
+---
+
+=== Projet C — Agent de recherche autonome avec outils
+*Axes :* IA agentic · LLM multilingue
+
+Agent qui reçoit une question complexe, la décompose en sous-tâches, appelle des APIs publiques (arXiv, Wikipedia, actualités) et synthétise une réponse argumentée avec sources.
+
+[cols="1,2", frame=sides, grid=none]
+|===
+| *Données d'entrée* | Requête utilisateur · APIs publiques
+| *Élément nouveau* | Planification agentic, tool use, graph d'exécution
+|===
+
+---
+
+=== Projet D — Assistant de compréhension de codebase (RAG for code)
+*Axes :* RAG / Retrieval · LLM multimodal (optionnel)
+
+Indexation d'un projet existant : réponses aux questions sur l'architecture, génération d'explications, de tests unitaires ou de suggestions de refactoring. Extension naturelle du labo 3.
+
+[cols="1,2", frame=sides, grid=none]
+|===
+| *Données d'entrée* | Code source, documentation
+| *Élément nouveau* | Chunking sémantique par AST, RAG for code
+|===
+
+---
+
+=== Projet E — Pipeline de synthèse audio/vidéo
+*Axes :* LLM multimodal · RAG / Retrieval
+
+Pipeline qui transcrit un enregistrement (Whisper), segmente par thème, génère un résumé structuré, des action items et permet un Q&A interactif sur le contenu.
+
+[cols="1,2", frame=sides, grid=none]
+|===
+| *Données d'entrée* | Audio, vidéo, transcriptions
+| *Élément nouveau* | Transcription, segmentation sémantique, multimodal pipeline
+|===
+
+---
+
+=== Projet F — Veille multilingue avec profil utilisateur
+*Axes :* LLM multilingue · RAG / Retrieval
+
+Collecte d'articles dans plusieurs langues via RSS, clustering thématique, et génération d'un briefing personnalisé adapté au profil et aux intérêts de l'utilisateur.
+
+[cols="1,2", frame=sides, grid=none]
+|===
+| *Données d'entrée* | Textes semi-structurés, flux multilingues
+| *Élément nouveau* | Cross-lingual embeddings, clustering, personnalisation
+|===
+
+---
+
+== Livrables
+
+=== Dépôt Git
+
+* Code source complet et fonctionnel
+* `README.md` permettant de lancer le POC en local (dépendances, variables d'environnement, étapes), ainsi qu'un rapport de 2-3 pages contenant la description technique (le schéma de l’architecture, choix de stack et justification, données utilisées, fonctionnement et les résultats)
+* Tout fichier de configuration ou dataset d'exemple nécessaire au lancement
+
+=== Présentation (10 minutes + 2 min Q&R)
+
+[cols="1,1,3", options="header", frame=all, grid=all]
+|===
+| Partie | Durée | Contenu attendu
+
+| Cas d'usage
+| 2 min
+| Problème adressé, utilisateurs cibles, valeur ajoutée de l'IA
+
+| Architecture technique
+| 2 min
+| Schéma de l'architecture, choix de stack et justification, données utilisées
+
+| Démo en direct
+| 3 min
+| Démonstration du POC fonctionnel (prévoir une vidéo de secours si réseau instable)
+
+| Analyse critique
+| 3 min
+| Limites identifiées, améliorations envisagées, dimension éthique
+|===
+
+[TIP]
+====
+Prévoyez un *fallback hors-ligne* (réponses pré-calculées ou vidéo screencast) en cas de problème réseau le jour de la présentation.
+====
+
+---
+
+== Critères d'évaluation
+
+
+- *Pertinence et originalité du cas d'usage* — problème concret, valeur identifiable, angle non trivial
+- *Maîtrise technique* — architecture cohérente, choix technologiques justifiés, qualité du prompting
+- *Analyse critique* — justification des choix, limites documentées
+- *POC fonctionnel* — démo réussie, ou pistes de réflexion solides si non abouti
+
+
+[IMPORTANT]
+====
+Un POC partiellement fonctionnel avec une *analyse critique honnête et rigoureuse* est valorisé. L'ambition raisonnée prime sur un projet trop large qui ne fonctionne pas du tout.
+====
+
+---
+
+== Ce qu'on attend au-delà du cours
+
+Chaque groupe doit expérimenter et documenter *au moins un élément non vu en cours* :
+
+* Un nouveau framework 
+* Une modalité nouvelle (vision, audio, structured output, function calling…)
+* Une stratégie de prompting avancée (chain-of-thought, few-shot, RAG avec reranking, HyDE…)
+* Un système agentic (planification, tools, mémoire, multi-agent…)
+* Une intégration avec une API externe ou un service tiers
+
